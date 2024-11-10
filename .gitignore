@@ -1,0 +1,13 @@
+csv
+db
+redace_django/collect_static/
+
+
+
+
+.env
+?.txt
+?.json
+.DS_Store
+*.pyc
+セットアップのメモ.md
