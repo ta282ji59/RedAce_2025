@@ -1,0 +1,14 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Logout Confirmation</title>
+</head>
+<body>
+    <h2>ログアウトしますか？</h2>
+    <form method="post" action="{% url 'logout' %}">
+        {% csrf_token %}
+        <button type="submit">はい</button>
+    </form>
+    <button><a href="{% url 'home' %}">いいえ</a></button>
+</body>
+</html>

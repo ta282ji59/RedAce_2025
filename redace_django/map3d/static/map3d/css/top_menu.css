@@ -1,0 +1,148 @@
+.top-menu{
+    position: absolute;
+    z-index: 10;
+    right: 0px;
+    top: 0px;
+    /* border-radius: 0; */
+    width: 100px;
+    height: 40px;
+}
+.top-menu button{
+    border-radius: 0;
+}
+.top-menu-in{
+    width: 500px;
+    padding: 0;
+    height: 40px;
+    border: 0px;
+    border-radius: 0;
+}
+.top-menu-in2{
+    width: 100%;
+    height: 40px;
+    padding: 0;
+    border-radius: 0;
+}
+.top-menu-in2 li{
+    width: 100px;
+    border-radius: 0;
+}
+.top_menu {
+    position: absolute;
+    z-index: 10;
+    right: 0px;
+    top: 0px;
+}
+#top_menu_toggle {
+    position: absolute;
+	display: none;
+}
+#top_menu_open {
+    position: absolute;
+    text-decoration: none;
+    display: block;
+    padding: 6px 0;
+    height: 18px;
+    width: 88px;
+    right: 0px;
+    background: rgba(135,5,34,0.5);
+    color: #FFF;
+    border: 1px solid rgb(244, 133, 133);
+    border-top: 1px solid rgba(135,5,34,0.7);
+    text-align: center;
+}
+#top_menu_open:hover {
+    cursor: pointer;
+    background-color: goldenrod;
+}
+.top_menu_contents {
+    position: absolute;
+    right: 89.5px;
+    top: -60px;
+    -webkit-transition: 0.53s transform;
+            transition: 0.53s transform;
+    -webkit-transition-timing-function: cubic-bezier(.38,.52,.23,.99);
+            transition-timing-function: cubic-bezier(.38,.52,.23,.99);
+}
+#top_menu_toggle:checked ~ .top_menu_contents {
+    -webkit-transform: translateY(20vw);
+            transform: translateY(60px);
+}
+.nav {
+    margin: 0 auto;
+    display: flex;
+    flex-direction: row-reverse;
+}
+.nav li {
+    position: relative;
+    list-style: none;
+}
+.nav li a {
+    display: block;
+    height: 30px;
+    padding: 5px 5px;
+    background: rgba(255,0,0,0.3); 
+    transition: 0.5s;
+    text-decoration: none;
+    border: 1px solid rgb(244, 133, 133);
+    box-sizing: border-box;
+    text-align: center;
+    color: #fff;
+}
+.nav ul.first a {
+    padding: 5px 5px;
+    text-align: left;
+}
+.nav li.bar {
+    width: 90px;
+}
+.nav li.bar:hover > a {
+    color: orange;
+    background: rgba(173,255,47,0.5);
+}
+.nav ul.first li.list:hover > a {
+    color: #00ffff;
+    background: rgba(173,255,47,0.5);
+}
+.nav ul.second li.list:hover > a {
+    color: pink;
+    background: rgba(173,255,47,0.5);
+}
+.nav ul.third li.list:hover > a {
+    color: purple;
+    background: rgba(173,255,47,0.5);
+}
+.nav li.bar ul.first {
+    padding: 0;
+    width: 180px;
+}
+.nav li.bar ul.first li.list {
+    overflow: hidden;
+    height: 0;
+    transition: 0.2s;
+}
+.nav li.bar:hover > ul.first > li.list {
+    overflow: visible;
+    height: 30px;
+}
+.nav li.list ul.second,
+.nav li.list ul.third {
+    position: absolute;
+    top: 0;
+    padding: 0;
+    width: 180px;
+    left: 180px;
+}
+.nav li.list:hover > ul.second > li.list,
+.nav li.list:hover > ul.third > li.list {
+    overflow: visible;
+    height: 30px;
+}
+.nav li.list ul.second:before,
+.nav li.list ul.third:before {
+    position: absolute;
+    content: "";
+    left: 180px;
+    padding: 0;
+    border: 5px solid transparent;
+}

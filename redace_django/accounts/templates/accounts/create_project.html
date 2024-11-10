@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html>
+<head>
+    {% load static %}
+    <title>Create Project - RedAce</title>
+</head>
+<body>
+    
+    <div class="grad"></div>
+    <div class="container" style="height:100%;">
+        <div class="row align-items-center" style="height:100%;">
+            <div class="col">
+                <!-- ロゴやタイトル -->
+            </div>
+            <div class="col">
+                <h1>Create Project</h1>
+                <form method='POST' action="{% url 'create_project' %}">
+                    {% csrf_token %}
+                    {{ form.as_p }}
+                    <button type="submit">Create</button>
+                </form>
+                <!-- メッセージの表示 -->
+                {% for message in messages %}
+                    <p>{{ message }}</p>
+                {% endfor %}
+            </div>
+        </div>
+        <a href="{% url 'home' %}">Return to home</a>
+    </div>
+</body>
+</html>

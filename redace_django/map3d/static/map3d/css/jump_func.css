@@ -1,0 +1,113 @@
+.jump-func {
+    position: absolute;
+    z-index: 2500;
+    left: 0px;
+    top: 10px;
+}
+#jump-func-toggle {
+    position: absolute;
+    display: none;
+}
+#jump-func-open {
+    position: absolute;
+    padding: 5px 0;
+    width: 40px;
+    background-color: rgba(65, 65, 65, 0.7);
+    color: #fff;
+    border: 1px solid rgb(99, 99, 99);
+    border-left: 0;
+    border-radius: 0 10px 10px 0;
+    text-align: center;
+}
+#jump-func-open:hover {
+    cursor: pointer;
+    background-color: goldenrod;
+}
+#jump-func-close {
+    display: block;
+    margin: 5px;
+    padding: 2px 0px;
+    border: 1px solid rgb(99, 99, 99);
+    background-color: rgba(233, 64, 64, 0.583);
+    color: white;
+    width: 30px;
+    text-align: center;
+    float: left;
+}
+#jump-func-close:hover {
+    cursor: pointer;
+    background-color: goldenrod;
+}
+.jump-func-contents {
+    position: fixed;
+    top: 5px;
+    left: -50vw;
+    width: 370px;
+    height: 40px;
+    -webkit-transition: 0.53s transform;
+    transition: 0.53s transform;
+    -webkit-transition-timing-function: cubic-bezier(0.38, 0.52, 0.23, 0.99);
+    transition-timing-function: cubic-bezier(0.38, 0.52, 0.23, 0.99);
+    background-color: rgba(0, 0, 0, 0.7);
+}
+#jump-func-toggle:checked ~ .jump-func-contents {
+    -webkit-transform: translateX(50vw);
+    transform: translateX(50vw);
+}
+#jump-func-toggle:checked + #jump-func-open {
+    display: none;
+}
+.jump-form {
+    float: left;
+}
+.jump-form .zoom-func {
+    display: flex;
+    margin-left: 5px;
+    height: 20px;
+}
+.jump-form .zoom-func > p {
+    margin: 3px 2px 0px 5px;
+    padding: 0;
+    height: 17px;
+    color: white;
+}
+.jump-form .zoom-func select {
+    margin: 2px 2px 2px 5px;
+    cursor: pointer;
+}
+.jump-form .input-latlon {
+    float: left;
+    display: flex;
+    margin-left: 7px;
+    height: 20px;
+}
+.jump-form input[name="latitude"],
+.jump-form input[name="longitude"] {
+    margin: 2px 2px 3px 2px;
+    border-width: 1px;
+    padding: 0 1px;
+    width: 55px;
+    height: 13px;
+    cursor: pointer;
+}
+.jump-form button#jumpbtn {
+    margin: 3px 5px;
+    padding: 0px 5px;
+    height: 15px;
+    background-color: #fff;
+    border: 1px grey;
+    border-radius: 5px;
+}
+.jump-form button#jumpbtn:hover {
+    background-color: goldenrod;
+}
+.mouse {
+    float: left;
+}
+.mouse p {
+    color: white;
+    margin: 0;
+}
+.mouse input {
+    width: 40px;
+}

@@ -1,0 +1,19 @@
+<h1>Red Ace</h1>
+<h2>Login</h2>
+If you have not created an account yet, then please <a href="{% url 'signup' %}">sign up</a> first.
+<form method="post">
+    {% csrf_token %}
+    <p>
+        <label>Username:&nbsp;</label>
+        <input type="text" name="username" placeholder="Username" required>
+    </p>
+    <p>
+        <label>Password:&nbsp;</label>
+        <input type="password" name="password" placeholder="Password" required>
+    </p>
+    <button type="submit">Login</button>
+</form>
+{% for message in messages %}
+    <p>{{ message }}</p>
+{% endfor %}
+

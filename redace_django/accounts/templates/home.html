@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Home</title>
+</head>
+<body>
+    <h1 style="text-align: center;">Red Ace</h1>
+    <p>login user<br> - {{ user }} - </p>
+
+    <p>
+        <a href="http://192.168.1.53:7010/" target="_blank">Jupyter</a>
+    </p>
+    <p>
+        <a href="{% url 'map3d:default' %}">map3d</a>
+    </p>
+    <p>
+        <a href="{% url 'logout_confirm' %}">Logout</a>
+    </p>
+
+    <!-- メッセージをalertで表示 -->
+    {% if messages %}
+      <script>
+        {% for message in messages %}
+          alert("{{ message }}");
+        {% endfor %}
+      </script>
+    {% endif %}
+
+    <!-- 所属プロジェクトの表示 -->
+    <h2>Projects</h2>
+    {% if projects %}
+        <ul>
+            {% for project in projects %}
+                <li>
+                    <strong>Project name:</strong> {{ project.name }}<br>
+                    <strong>Project member:</strong>
+                    <ul>
+                        {% for member in project.member.all %}
+                            <li>{{ member.username }}</li>
+                        {% endfor %}
+                    </ul>
+                    <p>-</p>
+                </li>
+            {% endfor %}
+        </ul>
+    {% else %}
+        <p>You don't join any project.</p>
+    {% endif %}
+    <div>
+        <a type="button" href="{% url 'create_project' %}">Create Project</a>
+    </div>
+    <div>
+        <a type="button" href="{% url 'join_project' %}">Join Project</a>
+    </div>
+</body>
+</html>
