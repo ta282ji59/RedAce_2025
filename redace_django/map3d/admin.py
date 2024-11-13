@@ -1,3 +1,6 @@
 from django.contrib import admin
+from .models import Spectrum
 
-# Register your models here.
+# @admin.register(Spectrum)
+class SpectrumAdmin(admin.ModelAdmin):
+    list_display = ('instrument', 'obs_id', 'user', 'created_date')

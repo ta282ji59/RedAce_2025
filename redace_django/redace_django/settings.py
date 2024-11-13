@@ -77,7 +77,7 @@ WSGI_APPLICATION = 'redace_django.wsgi.application'
 # データベース設定(🙇.envを使用して欲しい)
 DATABASES = {
     'default': {
-        'ENGINE': 'django.db.backends.postgresql',
+        'ENGINE': 'django.contrib.gis.db.backends.postgis',
         'NAME': 'mars',
         'USER': 'ta282ji',
         'PASSWORD': 'triathlon',
