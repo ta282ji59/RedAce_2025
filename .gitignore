@@ -4,7 +4,8 @@ redace_django/collect_static/
 
 
 
-
+redace_jupyter/jupyterhub-proxy.pid
+redace_jupyter/data
 .env
 ?.txt
 ?.json
