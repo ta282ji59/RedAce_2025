@@ -3,7 +3,7 @@ FROM continuumio/anaconda3
 
 # 必要なシステムパッケージをインストール
 RUN apt-get update && \
-    apt-get install -y --no-install-recommends build-essential && \
+    apt-get install -y --no-install-recommends build-essential binutils libproj-dev gdal-bin && \
     apt-get clean && \
     rm -rf /var/lib/apt/lists/*
 

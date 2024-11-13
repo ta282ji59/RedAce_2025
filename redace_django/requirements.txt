@@ -20,3 +20,4 @@ cryptography==2.7
 pipenv
 wheel
 uwsgi
+psycopg2
