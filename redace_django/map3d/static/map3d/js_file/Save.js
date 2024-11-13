@@ -16,21 +16,29 @@ function save_spectral(counter) {
     let graphCounter = counter + 1;
     let description = document.getElementById(`save_memo_${graphCounter}`).value;
 
-    console.log(description);
-
+    console.log(JSON.stringify({spectral_data: dataSave[counter],description: description,}))
     $.ajax({
         type: 'POST',
         headers: { 'X-CSRFToken': csrftoken },
-        url: '/spectra/spectrum/new',
+        url: 'spectrum/new',
         contentType: 'application/json',
         data: JSON.stringify({
             spectral_data: dataSave[counter],
             description: description,
         }),
+        success: function(response) {
+            if (response.status === "success") {
+                document.getElementById(`save_memo_${graphCounter}`).value = '';
+                alert('Save completed!!!');
+            } else {
+                alert(`Error: ${response.message}`);
+            }
+        },
+        error: function(xhr, status, error) {
+            alert(`An error occurred: ${xhr.responseText || error}`);
+        }
     });
-
-    document.getElementById(`save_memo_${graphCounter}`).value = '';
-    alert('Save completed!!!');
+    
 }
 
 $(function () {
