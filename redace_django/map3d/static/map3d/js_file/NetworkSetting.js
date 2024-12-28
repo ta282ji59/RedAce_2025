@@ -4,10 +4,10 @@
  */
 
 // CRISM、THEMISを起動する際のサーバーリンク
-var Network_mapserver = 'http://192.168.1.53:88/redace_map/?map=/maps/';
+var Network_mapserver='/redace_map/?map=/maps';
 
 // 火星レイヤーを出力するためのサーバーリンク
-var Network_terrainserver = 'http://192.168.1.53:88/redace_terrain/tilesets/mars/';
+var Network_terrainserver='/redace_terrain/tilesets/mars';
 
 
 
