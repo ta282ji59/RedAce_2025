@@ -1,11 +1,12 @@
 csv
 db
 redace_django/collect_static/
+info
 
 
 
-redace_jupyter/jupyterhub-proxy.pid
-redace_jupyter/data
+redace_jupyter/data/groups
+redace_jupyter/data/users
 .env
 ?.txt
 ?.json
