@@ -451,8 +451,8 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.14.2/xlsx.full.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/1.3.8/FileSaver.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.7.1/jszip.min.js"></script>
-<script src="//cdnjs.cloudflare.com/ajax/libs/proj4js/2.5.0/proj4.js"></script>
-<script type="text/javascript" src="//cdnjs.cloudflare.com/ajax/libs/dygraph/2.2.1/dygraph.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/proj4js/2.5.0/proj4.js"></script>
+<script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/dygraph/2.2.1/dygraph.min.js"></script>
 <script src="https://unpkg.com/axios/dist/axios.min.js"></script>
 <script src="https://unpkg.com/vue"></script><!-- Vue.js -->
 <script src="https://unpkg.com/vue@2.6.14/dist/vue.min.js"></script><!-- Vue2.js -->
@@ -476,6 +476,16 @@
 
 <script type="text/javascript">
   var DjangoURL = "{{ request.scheme }}://{{ request.get_host }}";
+</script>
+
+<script>
+  // Djangoから渡されたデータをJavaScriptで取得
+  const username = "{{ username|escapejs }}";
+  const projects = {{ projects|safe }};
+
+  // コンソールにログを出力
+  console.log("Username:", username);
+  console.log("Projects:", projects);
 </script>
 
 <!-- <script src='{% static "map3d/js_file/SpectralList.js" %}'></script> -->
