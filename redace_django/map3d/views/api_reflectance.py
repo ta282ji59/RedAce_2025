@@ -259,6 +259,7 @@ def base_json_getRef(params_json):
         field["obs_name"] = params_json["obs_name"]
         field["path"] = params_json["path"]
         field["Image_path"] = params_json["Image_path"]
+        field["pixels"] = params_json["pixels"]
         field["type"] = params_json["type"]
         # cubeファイルを開く, データを読み込み専用で開く, 第一引数：cubeファイル名
         cube_data = gdal.Open(field["path"]["main"]["cub"], gdal.GA_ReadOnly)
