@@ -1,7 +1,7 @@
 from django.contrib.gis.db import models
 from django.conf import settings
 
-class Spectrum(models.Model):
+class Spectrums(models.Model):
     instrument = models.CharField(max_length=10)
     obs_id = models.CharField(max_length=50, blank=True)
     path = models.TextField()
@@ -10,11 +10,11 @@ class Spectrum(models.Model):
     y_pixel = models.TextField()
     x_image_size = models.IntegerField()
     y_image_size = models.IntegerField()
-    wavelength = models.TextField()
-    reflectance = models.TextField()
+    wavelength = models.JSONField()
+    reflectance = models.JSONField()
     mineral_id = models.IntegerField(null=True, blank=True)
-    latitude = models.TextField()
-    longitude = models.TextField()
+    latitude = models.JSONField()
+    longitude = models.JSONField() 
     point = models.PointField(null=True, blank=True)
     description = models.TextField(null=True, blank=True)
     user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)

@@ -1,6 +1,7 @@
 from django.contrib import admin
-from .models import Spectrum
+from .models import Spectrums
 
-# @admin.register(Spectrum)
-class SpectrumAdmin(admin.ModelAdmin):
+class SpectrumsAdmin(admin.ModelAdmin):
     list_display = ('instrument', 'obs_id', 'user', 'created_date')
+
+admin.site.register(Spectrums, SpectrumsAdmin)
