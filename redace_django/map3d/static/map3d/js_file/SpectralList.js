@@ -1,499 +1,417 @@
-/** 
- * スペクトルリストに関する関数群
- */
+// このコードを読み込んだら自動実行する関数
+document.addEventListener("DOMContentLoaded", () => {
+    get_record_spectra();
+});
 
-/**
- * Django URLをJSで使いやすいように。
- * from map3d/index.html
- */
-get_spectra_axios = DjangoURL.get_spectra_axios;
-record_spectra_user_id = DjangoURL.record_spectra_user_id;
-record_spectra_user = DjangoURL.record_spectra_user;
-change_permission = DjangoURL.change_permission;
-description_update = DjangoURL.description_update;
-export_from_list = DjangoURL.export_from_list;
-delete_from_list = DjangoURL.delete_from_list;
+// ユーザー・Project情報取得
+function user_info() {
+    // Username、Projectの更新
+    let f_s = first_setting()
+    let user_count = 1
+    const selectElement = document.getElementById("export_list");
+    selectElement.innerHTML = "";
+    const option = document.createElement("option");
+    option.value = (f_s.username + "(" + (user_count++) + ")")
+    option.textContent = (f_s.username + "(" + "your account" + ")");
+    selectElement.appendChild(option);
+    f_s.projects.forEach(project => {
+        const option = document.createElement("option");
+        option.value = project + "(" + (user_count++) + ")";
+        option.textContent = project;
+        selectElement.appendChild(option);
+    });
+}
 
-var vm = new Vue({// Use Vue.js (version Vue2)
-    delimiters: ['[[', ']]'], // djangoとvue.jsのカッコが被るため、vue.jsのカッコを定義
-    el: '#app_vue',
-    data: {
-        dygraphs: [],
-        record_spectra: [],
-        dygraphs2_tmp: [],
-        record_spectra2_tmp: []
-    },
-    mounted: function() {
-        axios.defaults.xsrfCookieName = 'csrftoken'
-        axios.defaults.xsrfHeaderName = "X-CSRFTOKEN"
-        axios.get(get_spectra_axios)
-        .then(function (response) {
-            var response_data_json = JSON.parse(response.data);
-            for(var d in response_data_json.spectra_list) {
-                var dygraphs_tmp = response_data_json.dygraphs_spectra[d];
-                var spectra_tmp = response_data_json.spectra_list[d]
+// テーブル情報取得
+let data_copy;
+function table_info() {
+    let data = [];
 
-                vm.dygraphs.push(dygraphs_tmp);
-                vm.record_spectra.push(spectra_tmp);
-                vm.dygraphs2_tmp.push(dygraphs_tmp);
-                vm.record_spectra2_tmp.push(spectra_tmp);
-            }
-        })
-        .catch(function (error) {
-            console.log(error);
-        })
-    },
-    methods: {
-        dygraphs_plot: function(spectrum){
-            console.log("comecomecome")
-        },
-        get_record_spectra: function() {
-            // console.log("get_record_spectra here!!!!")
-            vm.dygraphs.splice(0)
-            vm.record_spectra.splice(0)
-            vm.dygraphs2_tmp.splice(0)
-            vm.record_spectra2_tmp.splice(0)
-            axios.defaults.xsrfCookieName = 'csrftoken'
-            axios.defaults.xsrfHeaderName = "X-CSRFTOKEN"
-            console.log(vm.record_spectra);
-            axios.get(get_spectra_axios)
-            .then(function (response) {
-                var response_data_json = JSON.parse(response.data);
-                for(var d in response_data_json.spectra_list) {
-                    var dygraphs_tmp = response_data_json.dygraphs_spectra[d];
-                    var spectra_tmp = response_data_json.spectra_list[d]
-                    console.log(spectra_tmp)
-                    vm.dygraphs.push(dygraphs_tmp);
-                    vm.record_spectra.push(spectra_tmp);
-                    vm.dygraphs2_tmp.push(dygraphs_tmp);
-                    vm.record_spectra2_tmp.push(spectra_tmp);
-                }
-            })
-            .catch(function (error) {
-                console.log(error);
-            })
-        },
+    // 凡例を消す(css)
+    const style = document.createElement('style');
+    style.innerHTML = `
+        .dygraph-legend {
+            display: none !important;
+        }
+    `;
+    document.head.appendChild(style);
 
-        change_list: function(record_spectra) {
-            vm.dygraphs.splice(0)
-            vm.record_spectra.splice(0)
-            var e = document.getElementById("select_list");
-            var select_value = e.options[e.selectedIndex].value;
-            console.log(select_value)
-            axios.defaults.xsrfCookieName = 'csrftoken'
-            axios.defaults.xsrfHeaderName = "X-CSRFTOKEN"
-            axios.post(get_spectra_axios,{"id":record_spectra_user_id, "user":record_spectra_user, "selected":select_value})
-            .then(function (response) {
-                console.log(vm.dygraphs)
-                var response_data_json = JSON.parse(response.data);
-                for(var d in response_data_json.spectra_list) {
-                    var dygraphs_tmp = response_data_json.dygraphs_spectra[d];
-                    var spectra_tmp = response_data_json.spectra_list[d]
-                    vm.dygraphs.push(dygraphs_tmp);
-                    vm.record_spectra.push(spectra_tmp);
-                }
-                console.log(vm.dygraphs)
-            })
-        },
+    const tableBody = document.getElementById("table-body");
+    tableBody.innerHTML = '';
 
-        // TODO 複数反射率表示対応
-        graph: function(){
-            var config = {
-                labels: ["wavelength", "reflectance"],
-                xlabel: 'Wavelength',
-                ylabel: 'Reflectance',
-                showRangeSelector: true, 
-                rangeSelectorHeight: 40,
-                axisLineColor: "black", 
-                gridLineColor: "black",
-                highlightSeriesBackgroundAlpha: 1.0
-            };
-            for(var d in vm.dygraphs) {
-                var graph = document.getElementById(vm.dygraphs[d].id_graph);
-                var wv_ref = vm.dygraphs[d].data;
-                // -1を NaN に変換
-                for (let i = 0; i < wv_ref.length; i++) {
-                    if (wv_ref[i][1] == -1) {
-                        wv_ref[i][1] = NaN;
-                    }
-                }
-                new Dygraph(graph, wv_ref, config);
-            }
-        },
+    let f_s = first_setting()
 
-        change_permission: function(id_permission){
-            console.log("changePermission")
-            var e = document.getElementById(id_permission[0][0]);
-            var select_value = e.options[e.selectedIndex].value;
-            console.log(select_value)
-            axios.defaults.xsrfCookieName = 'csrftoken'
-            axios.defaults.xsrfHeaderName = "X-CSRFTOKEN"
-            axios.post(change_permission,{"id_permission":id_permission[0][0], "change_to":select_value})
-            this.record_spectra.forEach((object, index) => {
-                if(object.id_permission === id_permission[0][0]){
-                    this.$set(this.record_spectra[index], "permission", select_value)
-                }
-            })
-        },
+    $.ajax({
+        type: 'POST',
+        headers: { 'X-CSRFToken': csrftoken },
+        url: 'ref_table/update/',
+        contentType: 'application/json',
+        data: JSON.stringify({
+            user_info: f_s.username,
+        }),
+        success: function (response) {
+            data = response.data;
+            data.reverse();
+            data_copy = data;
+            data.forEach((row, index) => {
+                // console.log(JSON.stringify({
+                //     data: row,
+                // }))
+                const tr = document.createElement("tr");
+                tr.setAttribute("data-id", row.id); // 各行にデータIDを設定
 
-        change_order: function(record_spectra){
-            var order_1 = document.getElementById("order_by#1");
-            var order_1_key = order_1.options[order_1.selectedIndex].value;
-            var order_1_order = document.getElementById("order_by#1_how");
-            var order_1_how = order_1_order.options[order_1_order.selectedIndex].value;
+                const point = formatPoint(row.latitude, row.longitude);
+                let table_point = point.includes('<br>(') ? point.split('<br>')[0] + '...' : point;
+                const created_date = formatDate(row.created_date);
 
-            var order_2 = document.getElementById("order_by#2");
-            var order_2_key = order_2.options[order_2.selectedIndex].value;
-            var order_2_order = document.getElementById("order_by#2_how");
-            var order_2_how = order_2_order.options[order_2_order.selectedIndex].value;
+                tr.innerHTML = `
+                  <th scope="col" width="50">${row.instrument}</th>
+                  <th scope="col" width="200">${row.data_id}</th>
+                  <th scope="col" width="140">${table_point}</th>
+                  <th scope="col" width="140">${created_date}</th>
+                  <th scope="col" width="270">${row.description}</th>
+                  <th scope="col" width="40" style="text-align: center; vertical-align: middle;">
+                    <input type="checkbox" style="transform: scale(1.5);" onclick="event.stopPropagation();">
+                  </th>
+                  <th scope="col" width="40" style="text-align: center; vertical-align: middle;">
+                    <input type="checkbox" style="transform: scale(1.5);" onclick="event.stopPropagation();">
+                  </th>
+                  <th scope="col" width="30" style="text-align: center; vertical-align: middle;">
+                    <input type="checkbox" style="transform: scale(1.5);" onclick="event.stopPropagation();">
+                  </th>
+                `;
 
-            if(order_1_key!="" && order_2_key==""){
-                if(order_1_how=="ascending"){
-                    vm.record_spectra.sort(function(a,b){
-                        if(a[order_1_key] > b[order_1_key]) return 1;
-                        if(a[order_1_key] < b[order_1_key]) return -1;
-                        return 0;
-                    })
-                }else if(order_1_how=="descending"){
-                    vm.record_spectra.sort(function(a,b){
-                        if(a[order_1_key] > b[order_1_key]) return -1;
-                        if(a[order_1_key] < b[order_1_key]) return 1;
-                        return 0;
-                    })
-                }
-            }
+                const graphRow = document.createElement("tr");
+                graphRow.style.display = "none";
+                graphRow.innerHTML = `
+                  <td colspan="8" style="padding: 0;">
+                    <div style="display: flex; width: 100%; height: 300px;">
+                      <div id="graph-container-${index}" style="flex: 1; height: 100%; border-right: 1px solid #ccc;"></div>
+                      <div style="flex: 1; height: 100%; display: flex; align-items: flex-start; justify-content: flex-start; padding: 10px; overflow-y: auto;">
+                        <p style="margin: 0;">${point}</p>
+                      </div>
+                    </div>
+                  </td>
+                `;
 
-            if(order_1_key=="" && order_2_key!=""){
-                if(order_2_how=="ascending"){
-                    vm.record_spectra.sort(function(a,b){
-                        if(a[order_2_key] > b[order_2_key]) return 1;
-                        if(a[order_2_key] < b[order_2_key]) return -1;
-                        return 0;
-                    })
-                }else if(order_2_how=="descending"){
-                    vm.record_spectra.sort(function(a,b){
-                        if(a[order_2_key] > b[order_2_key]) return -1;
-                        if(a[order_2_key] < b[order_2_key]) return 1;
-                        return 0;
-                    })
-                }
-            }
+                tr.addEventListener("click", () => {
+                    if (graphRow.style.display === "none") {
+                        graphRow.style.display = "";
+                        const graphContainer = document.getElementById(`graph-container-${index}`);
+                        if (!graphContainer.hasChildNodes()) {
+                            let graphData;
+                            let labels = ["Wavelength"];
 
-            if(order_1_key!="" && order_2_key!=""){
-                if(order_1_how=="ascending" && order_2_how=="ascending"){
-                    vm.record_spectra.sort(function(a,b){
-                        if(a[order_1_key] > b[order_1_key]) return 1;
-                        if(a[order_1_key] < b[order_1_key]) return -1;
-                        if(a[order_2_key] > b[order_2_key]) return 1;
-                        if(a[order_2_key] < b[order_2_key]) return -1;
-                        return 0;
-                    })
-                }
-                else if(order_1_how=="ascending" && order_2_how=="descending"){
-                    vm.record_spectra.sort(function(a,b){
-                        if(a[order_1_key] > b[order_1_key]) return 1;
-                        if(a[order_1_key] < b[order_1_key]) return -1;
-                        if(a[order_2_key] > b[order_2_key]) return -1;
-                        if(a[order_2_key] < b[order_2_key]) return 1;
-                        return 0;
-                    })
-                }
-                else if(order_1_how=="descending" && order_2_how=="ascending"){
-                    vm.record_spectra.sort(function(a,b){
-                        if(a[order_1_key] > b[order_1_key]) return -1;
-                        if(a[order_1_key] < b[order_1_key]) return 1;
-                        if(a[order_2_key] > b[order_2_key]) return 1;
-                        if(a[order_2_key] < b[order_2_key]) return -1;
-                        return 0;
-                    })
-                }
-                else if(order_1_how=="descending" && order_2_how=="descending"){
-                    vm.record_spectra.sort(function(a,b){
-                        if(a[order_1_key] > b[order_1_key]) return -1;
-                        if(a[order_1_key] < b[order_1_key]) return 1;
-                        if(a[order_2_key] > b[order_2_key]) return -1;
-                        if(a[order_2_key] < b[order_2_key]) return 1;
-                        return 0;
-                    })
-                }
-            }
-        },
+                            // reflectance が 1次元配列か 2次元配列かを判定
+                            if (Array.isArray(row.reflectance[0])) {
+                                // reflectance が 2次元配列の場合
+                                graphData = row.wavelength.map((wavelength, i) => {
+                                    const rowData = [wavelength];
+                                    row.reflectance.forEach(series => {
+                                        rowData.push(series[i] === -1 ? NaN : series[i]);
+                                    });
+                                    return rowData;
+                                });
 
-        update_description: function(id){
-            console.log("update_description here!!")
-            console.log(id[0][0])
-            console.log(typeof(id[0][0]))
-            var description_new = document.getElementById(id[0][0]).value;
-            console.log(description_new)
-            axios.defaults.xsrfCookieName = 'csrftoken'
-            axios.defaults.xsrfHeaderName = "X-CSRFTOKEN"
-            axios.post(description_update,{"id_update":id[0][0], "description":description_new})
-            this.record_spectra.forEach((object, index) => {
-                if(object.id_update === id[0][0]){
-                    this.$set(this.record_spectra[index], "description", description_new)
-                }
-            })
-        },
+                                // 各系列のラベルを設定
+                                row.reflectance.forEach((_, seriesIndex) => {
+                                    labels.push(`Reflectance ${seriesIndex + 1}`);
+                                });
+                            } else {
+                                // reflectance が 1次元配列の場合
+                                graphData = row.wavelength.map((wavelength, i) => [
+                                    wavelength,
+                                    row.reflectance[i] === -1 ? NaN : row.reflectance[i] // -1をnullに変換
+                                ]);
 
-        export_from_list: function(){
-            console.log("Execute export function.");
-
-            let e = document.getElementById("export_list");
-            let export_value = e.options[e.selectedIndex].value;
-            let export_list_name = [];
-            let export_list = [];
-            let graph_data, user, instrument, obs_id, latitude, longitude, created_date;
-            let checked_data = $('[id="export_from_list"]:checked').map( function() {
-                return $(this).val();
-            }).get();
-
-            for (let i = 0; i < checked_data.length; i++) {
-                this.record_spectra.forEach((object, index) => {
-                    if(object.id_export === checked_data[i]){
-                        graph_data = vm.dygraphs[index].data;
-                        for (let j = 0; j < graph_data.length; j++) {
-                            if (graph_data[j][1] === -1) {
-                                graph_data[j][1] = "NaN";
+                                // ラベルを設定
+                                labels.push("Reflectance");
                             }
+
+                            // console.log(graphData)
+
+                            new Dygraph(
+                                graphContainer,
+                                graphData,
+                                {
+                                    colors: ['#000080', '#8b0000', '#32cd32', '#ff00ff', '#f4a460'],
+                                    ylabel: 'Reflectance',
+                                    xlabel: 'Wavelength[μm]',
+                                    legend: "always",
+                                    animatedZooms: true,
+                                    showRangeSelector: true,
+                                    rangeSelectorHeight: 30,
+                                    rangeSelectorPlotStrokeColor: 'rgb(80,80,80)',
+                                    rangeSelectorPlotFillColor: 'rgb(80,80,80)',
+                                    showRoller: true,
+                                    labelsSeparateLines: true,
+                                    labels: labels,
+                                    pointClickCallback: null,
+                                    hideOverlayOnMouseOut: true,
+                                    labelsDiv: null,
+                                    labelsDivStyles: {
+                                        display: 'none',
+                                    },
+                                    connectSeparatedPoints: true,
+                                }
+                            );
                         }
-                        user = this.record_spectra[index]["user"];
-                        instrument = this.record_spectra[index]["instrument"];
-                        obs_id = this.record_spectra[index]["obs_id"];
-                        latitude = this.record_spectra[index]["latitude"];
-                        longitude = this.record_spectra[index]["longitude"];
-                        created_date = this.record_spectra[index]["created_date"];
-
-                        export_list_name.push(
-                            "\n" + instrument + " " + obs_id + " ( Lat:" + latitude + ", Lon:" + longitude + " )\n" +
-                            "\t-- " + created_date + " -- "
-                        );
-                        let export_data = { 
-                            "destination":export_value,
-                            "csv_filename":`${ obs_id }_E${ longitude }_N${ latitude }.csv`,
-                            "graph_data":graph_data,
-                        };
-                        export_list.push(export_data);
+                    } else {
+                        graphRow.style.display = "none";
                     }
-                })
-            }
+                });
 
-            if (window.confirm('You are about to export the following data.\n' + export_list_name)) {
-                axios.defaults.xsrfCookieName = 'csrftoken';
-                axios.defaults.xsrfHeaderName = "X-CSRFTOKEN";
-                axios.post(export_from_list, export_list);
-            }
+                tableBody.appendChild(tr);
+                tableBody.appendChild(graphRow);
+            });
         },
+        error: function (error) {
+            data = [];
+        }
+    });
+}
 
-        delete_from_list: function() {
-            console.log("Execute delete function.");
 
-            let delete_list_index = [];
-            let delete_list_name = [];
-            let delete_list = [];
-            let instrument, obs_id, latitude, longitude, created_date;
-            let checked_data = $('[id="delete_from_list"]:checked').map( function() {
-                return $(this).val();
-            }).get();
+// 緯度経度
+function formatPoint(lat, lon) {
+    let point = '';
+    for (let i = 0; i < lat.length; i++) {
+        point += "(" + lat[i] + "," + lon[i] + ")<br>"
+    }
+    return point;
+}
 
-            for (let i = 0 ; i < checked_data.length; i++) {
-                this.record_spectra.forEach((object, index) => {
-                    if (object.id_delete === checked_data[i]) {
-                        instrument = this.record_spectra[index]["instrument"];
-                        obs_id = this.record_spectra[index]["obs_id"];
-                        latitude = this.record_spectra[index]["latitude"];
-                        longitude = this.record_spectra[index]["longitude"];
-                        created_date = this.record_spectra[index]["created_date"];
-                        data_id = this.record_spectra[index]["data_id"];
+// 日付フォーマット変換関数
+function formatDate(isoDateString) {
+    const date = new Date(isoDateString);
+    const year = date.getUTCFullYear();
+    const month = String(date.getUTCMonth() + 1).padStart(2, '0');
+    const day = String(date.getUTCDate()).padStart(2, '0');
+    const hours = String(date.getUTCHours()).padStart(2, '0');
+    const minutes = String(date.getUTCMinutes()).padStart(2, '0');
+    const seconds = String(date.getUTCSeconds()).padStart(2, '0');
 
-                        delete_list_index.push(index);
-                        delete_list_name.push(
-                            "\n" + instrument + " " + obs_id + " ( Lat:" + latitude + ", Lon:" + longitude + " )\n" +
-                            "\t-- " + created_date + " -- "
-                        );
-                        let delete_data = { "data_id":data_id };
-                        delete_list.push(delete_data);
-                    }
-                })
-            }
-            let e = document.getElementById("select_list");
-            let select_value = e.options[e.selectedIndex].value;
+    return `${year}/${month}/${day} ${hours}:${minutes}:${seconds}`;
+}
 
-            if (select_value != "my_all" && select_value != "private") {
-                alert('You cannot remove any data with viewing shared data list.');
-            } else if (window.confirm('You are about to remove the following data.\n' + delete_list_name)) {
-                axios.defaults.xsrfCookieName = 'csrftoken';
-                axios.defaults.xsrfHeaderName = "X-CSRFTOKEN";
-                axios.post(delete_from_list, delete_list);
 
-                for (index = delete_list_index.length; index > 0; index--) {
-                    this.record_spectra.splice(delete_list_index[index-1], 1);
-                    this.dygraphs.splice(delete_list_index[index-1], 1);
+// データベースを更新する関数
+function get_record_spectra() {
+    user_info();
+    table_info();
+}
+
+function countCheckboxes(columnIndex) {
+    // columnIndex=0 _ MOVE
+    // columnIndex=1 _ EXPORT
+    // columnIndex=2 _ DELETE
+
+    // 選択したチェックボックスのカウント変数
+    let count = 0;
+
+    // テーブルボディ内のすべての行を取得
+    const rows = document.querySelectorAll('#table-body > tr');
+    let saveList = [];
+    for (const row of rows) {
+        // 行内の各チェックボックスを取得
+        const checkboxes = row.querySelectorAll('th input[type="checkbox"]');
+        const dataId = row.getAttribute("data-id");
+
+        if (columnIndex === 0 && count >= 2) {
+            // alert("If you want to use 'move_function', please check only one check-box.");
+            // saveList = [];
+            break;
+        }
+
+        if (checkboxes.length > columnIndex && checkboxes[columnIndex].checked) {
+            const rowData = data_copy.find(d => d.id === parseInt(dataId, 10));
+            if (rowData) {
+                if (columnIndex === 0) { // MOVE用データ
+                    saveList.push({
+                        instrument: rowData.instrument,
+                        obs_id: rowData.obs_id,
+                        latitude: rowData.latitude,
+                        longitude: rowData.longitude,
+                    });
                 }
+                else if (columnIndex === 1) { // EXPORT用データ
+                    let p = document.getElementById("export_list").value;
+                    let owner = false;
+                    if (p == (username + "(" + 1 + ")")) {
+                        owner = true;
+                    }
+                    p = p.replace(/\(\d+\)$/, '');
+
+                    let f = document.getElementById("csv_format_list").value;
+
+                    saveList.push({
+                        user: username,
+                        project: p,
+                        owner: owner,
+                        format: f,
+                        data_id: rowData.data_id,
+                        latitude: rowData.latitude,
+                        longitude: rowData.longitude,
+                        wavelength: rowData.wavelength,
+                        reflectance: rowData.reflectance,
+                        description: rowData.description,
+                    });
+                }
+                else if (columnIndex === 2) { // DELETE用データ
+                    saveList.push({ id: rowData.id });
+                }
+                count++;
             }
-        },
-
-        // FIXME usui search_from_list
-        search_from_list: function(){
-            console.log("search from list here!!")
-            var obs_id = document.getElementById("search_obs_id").value;
-            var lat_min = document.getElementById("search_lat_min").value;
-            var lat_max = document.getElementById("search_lat_max").value;
-            var lon_min = document.getElementById("search_lon_min").value;
-            var lon_max = document.getElementById("search_lon_max").value;
-            var key_note = document.getElementById("search_note").value;
-            if(obs_id=="" && lat_min=="" && lat_max=="" && lon_min=="" && lon_max=="" && key_note ==""){
-                console.log("No keyword!!!")
-                vm.record_spectra = vm.record_spectra2_tmp;
-                vm.dygraphs = vm.dygraphs2_tmp;
-            }else{
-                search_from_this_record = vm.record_spectra2_tmp;
-                search_from_this_dygraphs = vm.dygraphs2_tmp;
-
-            if(obs_id != ""){
-                console.log("search by obs_id");
-                filtered_record_spectra = [];
-                filtered_record_dygraphs = [];
-                search_from_this_record.forEach((object, index) => {
-                    if(object.obs_id.indexOf(obs_id) !== -1){
-                        filtered_record_spectra.push(object);
-                        filtered_record_dygraphs.push(search_from_this_dygraphs[index]);
-                    }
-                })
-                search_from_this_record = filtered_record_spectra;
-                search_from_this_dygraphs = filtered_record_dygraphs;
-            }
-
-            if(lat_min!="" && lat_max==""){
-                console.log("search by lat_min only");
-                filtered_record_spectra = [];
-                filtered_record_dygraphs = [];
-                search_from_this_record.forEach((object, index) => {
-                    if(lat_min <= object.latitude && object.latitude <= 90){
-                        filtered_record_spectra.push(object);
-                        filtered_record_dygraphs.push(search_from_this_dygraphs[index]);
-                    }
-                })
-                search_from_this_record = filtered_record_spectra;
-                search_from_this_dygraphs = filtered_record_dygraphs;
-            }else if(lat_min=="" && lat_max!=""){
-                console.log("search by lat_max only");
-                filtered_record_spectra = [];
-                filtered_record_dygraphs = [];
-                search_from_this_record.forEach((object, index) => {
-                    if(-90 <= object.latitude && object.latitude <= lat_max){
-                        filtered_record_spectra.push(object);
-                        filtered_record_dygraphs.push(search_from_this_dygraphs[index]);
-                    }
-                })
-                search_from_this_record = filtered_record_spectra;
-                search_from_this_dygraphs = filtered_record_dygraphs;
-            }else if(lat_min!="" && lat_max!=""){
-                console.log("search by lat_min and lat_max");
-                filtered_record_spectra = [];
-                filtered_record_dygraphs = [];
-                search_from_this_record.forEach((object, index) => {
-                    if(lat_min <= object.latitude && object.latitude <= lat_max){
-                        filtered_record_spectra.push(object);
-                        filtered_record_dygraphs.push(search_from_this_dygraphs[index]);
-                    }
-                })
-                search_from_this_record = filtered_record_spectra;
-                search_from_this_dygraphs = filtered_record_dygraphs;
-            }
-
-            if(lon_min!="" && lon_max==""){
-                console.log("search by lon_min only");
-                filtered_record_spectra = [];
-                filtered_record_dygraphs = [];
-                search_from_this_record.forEach((object, index) => {
-                    if(lon_min <= object.longitude && object.longitude <= 180){
-                        filtered_record_spectra.push(object);
-                        filtered_record_dygraphs.push(search_from_this_dygraphs[index]);
-                    }
-                })
-                search_from_this_record = filtered_record_spectra;
-                search_from_this_dygraphs = filtered_record_dygraphs;
-            }else if(lon_min=="" && lon_max!=""){
-                console.log("search by lon_max only");
-                filtered_record_spectra = [];
-                filtered_record_dygraphs = [];
-                search_from_this_record.forEach((object, index) => {
-                    if(-180 <= object.longitude && object.longitude <= lon_max){
-                        filtered_record_spectra.push(object);
-                        filtered_record_dygraphs.push(search_from_this_dygraphs[index]);
-                    }
-                })
-                search_from_this_record = filtered_record_spectra;
-                search_from_this_dygraphs = filtered_record_dygraphs;
-            }else if(lon_min!="" && lon_max!=""){
-                console.log("search by lon_min and lon_max");
-                filtered_record_spectra = [];
-                filtered_record_dygraphs = [];
-                search_from_this_record.forEach((object, index) => {
-                    if(lon_min <= object.longitude && object.longitude <= lon_max){
-                        filtered_record_spectra.push(object);
-                        filtered_record_dygraphs.push(search_from_this_dygraphs[index]);
-                    }
-                })
-                search_from_this_record = filtered_record_spectra;
-                search_from_this_dygraphs = filtered_record_dygraphs;
-            }
-
-            if(key_note !=""){
-                console.log("search by key_note");
-                filtered_record_spectra = [];
-                filtered_record_dygraphs = [];
-                search_from_this_record.forEach((object, index) => {
-                    if(object.description.indexOf(key_note) !== -1){
-                        filtered_record_spectra.push(object);
-                        filtered_record_dygraphs.push(search_from_this_dygraphs[index]);
-                    }
-                })
-                search_from_this_record = filtered_record_spectra;
-                search_from_this_dygraphs = filtered_record_dygraphs;
-            }
-
-            vm.record_spectra = search_from_this_record;
-            vm.dygraphs = filtered_record_dygraphs;
-            }
-        },
-
-        original_thumbnail: function(item){
-            wms_layers = {};
-            wms_layers.json = {};
-            wms_layers.ratio= {};
-            var extent = [0, 0, 753, 668];
-            var projection = new ol.proj.Projection({
-                code: 'pixels',
-                units: 'pixels',
-                extent: extent
-            });
-            wms_layers.thumbnail = new ol.Map({
-                logo: false,
-                controls: ol.control.defaults().extend([
-                    new ol.control.ZoomSlider()
-                ]),
-                layers: [
-                    new ol.layer.Image({
-                        source: new ol.source.ImageStatic({
-                            url: '/collectstatic' + item[0][0].image_path,
-                            projection: projection,
-                            imageExtent: extent
-                        })
-                    })
-                ],
-                target: item[0][0].id_thumbnail,
-                controls: ol.control.defaults().extend([
-                    new ol.control.ZoomSlider()
-                ]),
-                view: new ol.View({
-                    projection: projection,
-                    extent: extent,
-                    center: ol.extent.getCenter(extent),
-                    zoom: 0,
-                    maxZoom: 6,
-                })
-            });
         }
     }
-});
+
+    if (count == 0) {
+        alert("Please check any check-box");
+    }
+    return saveList;
+}
+
+
+let currentGeoJson = null; // 現在の GeoJSON データを追跡
+
+function move_from_list() {
+    const moveRows = countCheckboxes(0);
+    if (moveRows.length === 1) {
+        console.log(moveRows);
+
+        // Cesium のカメラ移動処理
+        const targetLocation = moveRows[0];
+        const instrument = targetLocation.instrument;
+        const obs_id = targetLocation.obs_id;
+        const latitude = targetLocation.latitude[0];
+        const longitude = targetLocation.longitude[0];
+
+        // GeoJSON データの作成
+        const geojson = {
+            type: "FeatureCollection",
+            features: [
+                {
+                    type: "Feature",
+                    geometry: {
+                        type: "Point",
+                        coordinates: [longitude, latitude],
+                    },
+                    properties: {
+                        name: `${instrument}(${obs_id})`,
+                        description: `If you want to search this data in detail, please click to button which is left-top screen`,
+                    },
+                },
+            ],
+        };
+
+        if (currentGeoJson) {
+            roots.map.dataSources.remove(currentGeoJson);
+            currentGeoJson = null;
+        }
+
+        // GeoJSON データをロードしてピンを追加
+        Cesium.GeoJsonDataSource.load(geojson, {
+            markerColor: Cesium.Color.PINK, // ピンの色
+            clampToGround: true, // 地表にクランプ
+        }).then(function (dataSource) {
+            currentGeoJson = dataSource; // 現在の GeoJSON を追跡
+            roots.map.dataSources.add(dataSource);
+
+            // 最初のエンティティを取得
+            const entity = dataSource.entities.values[0];
+            if (entity) {
+                // InfoBox を表示
+                roots.map.selectedEntity = entity;
+
+                // カメラを移動
+                roots.map.camera.flyTo({
+                    destination: Cesium.Cartesian3.fromDegrees(longitude, latitude, 1500000),
+                });
+            }
+        });
+    } 
+    else if (moveRows.length > 1) {
+        alert("If you want to use 'move_function', please check only one check-box.");
+    } 
+    else {
+        alert("No row selected for move functionality.");
+    }
+}
+
+
+
+function export_from_list() {
+    const exportRows = countCheckboxes(1); // チェックされた行を取得
+    if (exportRows.length > 0) {
+        console.log("Export対象の行:", JSON.stringify(exportRows));
+        $.ajax({
+            type: 'POST',
+            headers: { 'X-CSRFToken': csrftoken },
+            url: 'ref_table/export/',
+            contentType: 'application/json',
+            data: JSON.stringify(exportRows),
+            success: function (response) {
+                console.log("転送成功:", response);
+
+                // レスポンスに含まれる結果を確認して処理
+                if (response.results && response.results.length > 0) {
+                    let successMessages = [];
+                    let errorMessages = [];
+                    
+                    response.results.forEach((result, index) => {
+                        if (result.status === "success") {
+                            successMessages.push(`Success: ${result.file}\n\n`);
+                        } else {
+                            console.error(`ファイル作成エラー (${index + 1}): ${result.message}`);
+                            errorMessages.push(`エラー: ${result.message}`);
+                        }
+                    });
+
+                    // アラートを1回だけ表示
+                    if (successMessages.length > 0) {
+                        alert(successMessages.join('\n'));
+                    }
+                    if (errorMessages.length > 0) {
+                        alert(errorMessages.join('\n'));
+                    }
+                } 
+                else {
+                    alert("転送成功しましたが、結果が返されませんでした。");
+                }
+            },
+            error: function (error) {
+                console.error("転送エラー:", error);
+                alert("転送中にエラーが発生しました。");
+            }
+        });
+    } else {
+        alert("エクスポート対象の行を選択してください。");
+    }
+};
+
+
+
+// 削除関数
+function delete_from_list() {
+    const deleteRows = countCheckboxes(2); // "delete"列に対応するチェックされた行を取得
+    console.log(deleteRows)
+    if (deleteRows.length > 0) {
+        console.log("Delete対象の行:", deleteRows);
+        $.ajax({
+            type: 'POST',
+            headers: { 'X-CSRFToken': csrftoken },
+            url: 'ref_table/delete/',
+            contentType: 'application/json',
+            data: JSON.stringify(deleteRows),
+            success: function (response) {
+                console.log("削除成功:", response);
+                alert("Success. The data you checked is deleted.");
+                get_record_spectra(); // テーブルを更新
+            },
+            error: function (error) {
+                console.error("削除エラー:", error);
+                alert("削除中にエラーが発生しました。");
+            }
+        });
+    }
+};

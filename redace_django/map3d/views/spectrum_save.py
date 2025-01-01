@@ -2,9 +2,11 @@
 from django.http import JsonResponse
 from django.utils import timezone
 from django.contrib.gis.geos import Point
-from ..models import Spectrum
+from ..models import Spectrums
 from django.views.decorators.csrf import csrf_exempt
 import json
+import logging
+logging.basicConfig(level=logging.DEBUG, format='%(levelname)s: %(message)s')
 
 @csrf_exempt
 def spectrum_data_save(request):
@@ -15,33 +17,38 @@ def spectrum_data_save(request):
             description = data.get("description")
             user = request.user
 
+            logging.debug('')
+            
+
             for entry in spectral_data:
                 path = entry.get("path", {})
-                point = Point(entry["coordinate"][0], entry["coordinate"][1]) if "coordinate" in entry else None
-
-                x_pixel = json.dumps(entry.get("pixels")[0])
-                y_pixel = json.dumps(entry.get("pixels")[1])
-                latitude = json.dumps(entry["coordinate"][1])
-                longitude = json.dumps(entry["coordinate"][0])
+                # logging.debug('')
+                if isinstance(entry["pixels"][0], list):  # リストのリスト形式の場合
+                    x_pixel = [coord[0] for coord in entry["pixels"]]
+                    y_pixel = [coord[1] for coord in entry["pixels"]]
+                    latitude = [coord[1] for coord in entry["coordinate"]] 
+                    longitude = [coord[0] for coord in entry["coordinate"]] 
+                else:  # 単一のリスト形式の場合
+                    x_pixel = [entry["pixels"][0]]
+                    y_pixel = [entry["pixels"][1]]
+                    latitude = [entry["coordinate"][1]]
+                    longitude = [entry["coordinate"][0]]
                 
-                Spectrum.objects.create(
+                
+                Spectrums.objects.create(
                     instrument=entry.get("obs_name"),
                     obs_id=entry.get("obs_ID"),
                     path=json.dumps(path),
                     image_path=entry.get("Image_path"),
-                    # x_pixel=entry["pixels"][0],
-                    # y_pixel=entry["pixels"][1],
                     x_pixel=x_pixel,
                     y_pixel=y_pixel,
                     x_image_size=entry["Image_size"][0],
                     y_image_size=entry["Image_size"][1],
-                    wavelength=json.dumps(entry.get("band_bin_center", [])),
-                    reflectance=json.dumps(entry.get("reflectance", [])),
-                    # latitude=entry["coordinate"][1],
-                    # longitude=entry["coordinate"][0],
+                    wavelength=entry.get("band_bin_center", []),
+                    reflectance=entry.get("reflectance", []),
                     latitude=latitude,
                     longitude=longitude,
-                    point=point,
+                    # point=point,
                     description=description,
                     user=user,
                     created_date=timezone.now(),

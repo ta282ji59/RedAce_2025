@@ -131,7 +131,7 @@
           </tbody>
         </table>
       </div>
-      <div class="switch2">
+      <!-- <div class="switch2">
         <p>&emsp;Plot your saved coordinate
           <label class="switch2__label">
             <input type="checkbox" class="switch2__input" onclick="loadgeojson({{record_json}}, this.checked)">
@@ -139,7 +139,7 @@
             <span class="switch2__circle"></span>
           </label>
         </p>
-      </div>
+      </div> -->
       <div class="rangeTerrain">
         <p>&emsp;Terrain magnification
           &emsp;0&nbsp;
@@ -226,20 +226,20 @@
               <div class="row mb-1">
                 <div class="col-4">
                   <div class="input-group input-group-sm">
-                    <select class="form-select form-select-sm" aria-label=".form-select-sm example" name="example_select" v-on:change="change_list(record_spectra);">
+                    <!-- <select class="form-select form-select-sm" aria-label=".form-select-sm example" name="example_select" v-on:change="change_list(record_spectra);">
                       <option value="my_all">my list (ALL)</option>
                       <option value="private">my list (Private only)</option>
                       {% for project in projects %}
                       <option value="{{ project }}">{{ project }}</option>
                       {% endfor %}
-                    </select>
-                    <button type="submit" class="btn btn-outline-danger" v-on:click="get_record_spectra();">Update</button>
+                    </select> -->
+                    <button type="submit" class="btn btn-outline-danger" onclick="get_record_spectra();">Update</button>
                     <!-- id="updatebtn"  -->
                   </div>
                 </div>
               </div>
 
-              <div class="row mb-1">
+              <!-- <div class="row mb-1">
                 <div class="col-10">
                   <div class="input-group input-group-sm">
                     <select class="form-select form-select-sm" aria-label=".form-select-sm example" id="order_by#1" name="order_by">
@@ -267,12 +267,11 @@
                       <option value="descending">DESC</option>
                     </select>
                     <button type="submit" class="btn btn-outline-danger" v-on:click="change_order(record_spectra);" style="width: 60px;">Sort</button>
-                    <!-- id="sortbtn" -->
                   </div>
                 </div>
-              </div>
+              </div> -->
 
-              <div class="row mb-3">
+              <!-- <div class="row mb-3">
                 <div class="col-8">
                   <div class="input-group input-group-sm">
                     <div class="accordion" id="accordionExample">
@@ -320,7 +319,6 @@
                               <div class="row mb-3">
                                 <div class="col">
                                   <button type="submit" class="btn btn-outline-danger" v-on:click="search_from_list();">Search</button>
-                                  <!-- id="searchbtn" -->
                                 </div>
                               </div>
                             </div>
@@ -329,40 +327,51 @@
                       </div>
                     </div>
                   </div>
-                </div>
+                </div> -->
 
-                <div class="col-4">
-                  <div class="input-group input-group-sm">
-                    <span class="input-group-text">Export destination</span>
-                    <select class="form-select form-select-sm col-auto" id="export_list" aria-label=".form-select-sm example" name="export_select">
-                    <!-- <select id="export_list" name="export_select" style="width:140PX"> -->
-                      <option value="private">Private</option>
-                      {% for project in projects %}
-                      <option value="{{ project }}">{{ project }}</option>
-                      {% endfor %}
-                    </select>
+                <div class="row">
+                  <div class="col-5">
+                    <div class="input-group input-group-sm">
+                      <span class="input-group-text">Export destination</span>
+                      <select class="form-select form-select-sm col-auto" id="export_list" aria-label=".form-select-sm example" name="export_select">
+                      </select>
+                    </div>
+                  </div>
+                  <div class="col-4">
+                    <div class="input-group input-group-sm">
+                      <span class="input-group-text">CSV format</span>
+                      <select class="form-select form-select-sm col-auto" id="csv_format_list" aria-label=".form-select-sm example" name="export_select">
+                        <option value="merged1">Merged(pattern_1)</option>
+                        <!-- <option value="merged2">Merged(pattern_2)</option> -->
+                        <option value="separate1">Separate(pattern_1)</option>
+                        <!-- <option value="separate2">Separate(pattern_2)</option> -->
+                      </select>
+                    </div>
                   </div>
                 </div>
               </div>
+              <br>
 
               <table class="table table-sm table-bordered scroll-contents-title" border="1" style="margin:0;">
                 <thead>
                   <tr>
+                    <th scope="col" width="50">Instrument</th>
                     <th scope="col" width="200">ID</th>
-                    <th scope="col" width="70">Lat</th>
-                    <th scope="col" width="70">Lon</th>
-                    <th scope="col" width="140">Creation-tim</th>
+                    <th scope="col" width="140">(lat,lon)</th>
+                    <th scope="col" width="140">Create time</th>
                     <th scope="col" width="270">Note</th>
-                    <th scope="col" width="40"><button type="submit" id="export-btn" v-on:click="export_from_list();"><i class="fa fa-file-export"></i></button></th>
-                    <th scope="col" width="30"><button type="submit" id="deletebtn" v-on:click="delete_from_list();"><i class="fa fa-trash-alt"></i></button></th>
+                    <th scope="col" width="40"><button type="submit" id="move-btn" onclick="move_from_list();"><i class="fas fa-location-arrow"></i></button></th>
+                    <th scope="col" width="40"><button type="submit" id="export-btn" onclick="export_from_list();"><i class="fa fa-file-export"></i></button></th>
+                    <th scope="col" width="30"><button type="submit" id="delete-btn" onclick="delete_from_list();"><i class="fa fa-trash-alt"></i></button></th>
                   </tr>
                 </thead>
+                <tbody id="table-body"></tbody>
               </table>
 
               <div class="scroll_contents">
                 <li v-cloak v-for="(item, index) in record_spectra">
                   <div class="accordion_menu">
-                    <div class="nonhidden_contents">
+                    <!-- <div class="nonhidden_contents">
                       <label :for="[[ item.id_accordion ]]">
                         <table class="table table-sm table-hover table-bordered list" border="1" style="table-layout: fixed; margin:0;">
                           <tr>
@@ -376,7 +385,7 @@
                           </tr>
                         </table>
                       </label>
-                    </div>
+                    </div> -->
 
                     <input type="checkbox" :id="[[ item.id_accordion ]]" class="on-off" @click="graph(), original_thumbnail([[ item ]])" />
 
@@ -480,12 +489,19 @@
 
 <script>
   // Djangoから渡されたデータをJavaScriptで取得
-  const username = "{{ username|escapejs }}";
-  const projects = {{ projects|safe }};
+  function first_setting(){
+    const username = "{{ username|escapejs }}";
+    const projects = {{ projects|safe }};
 
-  // コンソールにログを出力
-  console.log("Username:", username);
-  console.log("Projects:", projects);
+    // コンソールにログを出力
+    console.log("Username:", username);
+    console.log("Projects:", projects);
+    return{
+      username,
+      projects
+    }
+  }
+
 </script>
 
-<!-- <script src='{% static "map3d/js_file/SpectralList.js" %}'></script> -->
+<script src='{% static "map3d/js_file/SpectralList.js" %}'></script>
