@@ -1,0 +1,133 @@
+body {
+    background-color: #640000;
+    color: white;
+    font-family: Arial, sans-serif;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+}
+
+.layout {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    width: 80%;
+    max-width: 1200px;
+    height: auto;
+}
+
+
+.logo {
+    font-weight: bold;
+    margin-bottom: 20px;
+    color: white;
+    font-size: 32px;
+    text-align: center;
+}
+
+
+.content {
+    display: flex;
+    width: 100%;
+    background-color: #81211e;
+    border-radius: 10px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+    padding: 20px;
+}
+
+
+.left, .right {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-around;
+    align-items: center;
+}
+
+.image-container {
+    position: relative;
+    text-align: center;
+    margin-bottom: 20px;
+}
+
+.icon {
+    width: 250px;
+    height: auto;
+    border: 2px solid #ccc;
+    border-radius: 5px;
+    transition: opacity 0.3s ease;
+}
+
+.icon:hover {
+    opacity: 0.8;
+}
+
+.image-text {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    color: white;
+    font-size: 18px;
+    font-weight: bold;
+    text-shadow: 
+        -1px -1px 0 #000,
+        1px -1px 0 #000,
+        -1px 1px 0 #000,
+        1px 1px 0 #000;
+    pointer-events: none;
+}
+
+
+.project-container {
+    width: 100%;
+    max-width: 400px;
+    background-color: #6a0e0e;
+    padding: 20px;
+    border-radius: 10px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+}
+
+.project-container h2 {
+    text-align: center;
+}
+
+.project-container a[type="button"] {
+    display: block;
+    background-color: #8B0000;
+    color: white;
+    text-align: center;
+    padding: 10px 15px;
+    border-radius: 5px;
+    text-decoration: none;
+    margin-top: 10px;
+    font-weight: bold;
+    width: 80%;
+    margin-left: auto;
+    margin-right: auto;
+}
+
+.project-container a[type="button"]:hover {
+    background-color: #A52A2A;
+}
+
+.logout-link {
+    display: inline-block;
+    background-color: #8B0000;
+    color: white;
+    text-decoration: none;
+    padding: 10px 20px;
+    border-radius: 5px;
+    font-weight: bold;
+    margin-top: 20px;
+    text-align: center;
+    transition: background-color 0.3s ease;
+}
+
+.logout-link:hover {
+    background-color: #A52A2A;
+}

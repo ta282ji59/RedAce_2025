@@ -1,0 +1,391 @@
+.layer_menu {
+    position: absolute;
+    z-index: 998;
+    left: 0px;
+    top: 120px;
+}
+#layer_menu_toggle {
+    position: absolute;
+    display: none;
+}
+#layer_menu_open {
+    position: absolute;
+    padding: 5px 0;
+    width: 40px;
+    background-color: rgba(65, 65, 65, 0.7);
+    color: #fff;
+    border: 1px solid rgb(99, 99, 99);
+    border-left: 0;
+    border-radius: 0 10px 10px 0;
+    text-align: center;
+}
+#layer_menu_open:hover {
+    cursor: pointer;
+    background-color: goldenrod;
+}
+#layer_menu_close {
+    display: block;
+    float: left;
+    margin: 5px;
+    padding: 2px 0px;
+    border: 1px solid rgb(99, 99, 99);
+    background-color: rgba(233, 64, 64, 0.583);
+    color: white;
+    width: 30px;
+    text-align: center;
+}
+#layer_menu_close:hover {
+    cursor: pointer;
+    background-color: goldenrod;
+}
+.layer_menu_contents {
+    position: fixed;
+    top: 115px;
+    left: -50vw;
+    width: 370px;
+    -webkit-transition: 0.53s transform;
+    transition: 0.53s transform;
+    -webkit-transition-timing-function: cubic-bezier(0.38, 0.52, 0.23, 0.99);
+    transition-timing-function: cubic-bezier(0.38, 0.52, 0.23, 0.99);
+    background-color: rgba(0, 0, 0, 0.7);
+}
+.layer_menu_contents select {
+    width: 130px;
+    height: 30px;
+    font-size: 14px;
+    color: rgb(199, 198, 198);
+}
+#layer_menu_toggle:checked ~ .layer_menu_contents {
+    -webkit-transform: translateX(50vw);
+    transform: translateX(50vw);
+}
+#layer_menu_toggle:checked + #layer_menu_open {
+    display: none;
+}
+
+@import url(https://fonts.googleapis.com/css?family=Open+Sans);
+.layer_menu_contents input[type="checkbox"] {
+    display: none;
+}
+.layer_menu_contents input[type="checkbox"] + label {
+    display: block;
+    position: relative;
+    padding-left: 25px;
+    font-family: serif;
+    font-size: 14px;
+    color: #ddd;
+    cursor: pointer;
+    -webkit-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+}
+.layer_menu_contents input[type="checkbox"] + label:last-child {
+    margin-bottom: 0;
+}
+.layer_menu_contents input[type="checkbox"] + label:before {
+    content: "";
+    display: block;
+    width: 12px;
+    height: 12px;
+    border: 2px solid #6cc0e5;
+    position: absolute;
+    left: 0;
+    top: 0px;
+    opacity: 1;
+    -webkit-transition: all 0.12s, border-color 0.08s;
+    transition: all 0.12s, border-color 0.08s;
+}
+.layer_menu_contents input[type="checkbox"]:checked + label:before {
+    width: 5px;
+    top: -3px;
+    left: 3px;
+    border-radius: 0;
+    opacity: 1;
+    border-top-color: transparent;
+    border-left-color: transparent;
+    -webkit-transform: rotate(45deg);
+    transform: rotate(45deg);
+}
+.layer_menu_contents input[type="checkbox"]:checked + label,
+.layer_menu_contents input[type="checkbox"]:checked + label + select {
+    color: #6cc0e5;
+}
+#toolbar {
+    margin-left: 5px;
+    padding: 4px;
+}
+#toolbar input {
+    vertical-align: middle;
+    padding-top: 2px;
+    padding-bottom: 2px;
+}
+#toolbar table tr {
+    transform: translateY(0);
+    transition: transform 0.4s ease-out;
+}
+#toolbar table tr select {
+    border-radius: 5px;
+    border-color: white;
+    background-color: black;
+    width: 100%;
+}
+#toolbar table tr.up {
+    transform: translateY(33px);
+    transition: none;
+}
+#toolbar table tr.down {
+    transform: translateY(-33px);
+    transition: none;
+}
+#toolbar .trLayer {
+    background-color: rgba(255, 255, 255, 0.7);
+}
+.switch2 p,
+.rangeTerrain p {
+    color: white;
+}
+.rangeTerrain input {
+    background-color: rgba(255, 255, 255, 0.7);
+    width: 120px;
+}
+
+.search_menu {
+    position: absolute;
+    z-index: 999;
+    left: 0px;
+    top: 80px;
+}
+#search_menu_toggle {
+    position: absolute;
+    display: none;
+}
+#search_menu_open {
+    position: absolute;
+    padding: 5px 0;
+    width: 40px;
+    background-color: rgba(65, 65, 65, 0.7);
+    color: #fff;
+    border: 1px solid rgb(99, 99, 99);
+    border-left: 0;
+    border-radius: 0 10px 10px 0;
+    text-align: center;
+}
+#search_menu_open:hover {
+    cursor: pointer;
+    background-color: goldenrod;
+}
+#search_menu_close {
+    display: block;
+    float: left;
+    margin: 5px;
+    padding: 2px 0px;
+    border: 1px solid rgb(99, 99, 99);
+    background-color: rgba(233, 64, 64, 0.583);
+    color: white;
+    width: 30px;
+    text-align: center;
+}
+#search_menu_close:hover {
+    cursor: pointer;
+    background-color: goldenrod;
+}
+.search_menu_contents {
+    position: fixed;
+    top: 75px;
+    left: -50vw;
+    width: 400px;
+    -webkit-transition: 0.53s transform;
+    transition: 0.53s transform;
+    -webkit-transition-timing-function: cubic-bezier(0.38, 0.52, 0.23, 0.99);
+    transition-timing-function: cubic-bezier(0.38, 0.52, 0.23, 0.99);
+    background-color: black;
+}
+#search_menu_toggle:checked ~ .search_menu_contents {
+    -webkit-transform: translateX(50vw);
+    transform: translateX(50vw);
+}
+#search_menu_toggle:checked + #search_menu_open {
+    display: none;
+}
+#search_toolbar {
+    margin: 10px;
+    padding: 10px;
+}
+.search_input_container {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+}
+
+#search_toolbar hr {
+    border: none;
+    height: 2px;
+    background-color: white;
+    margin: 20px 0;
+}
+
+#search_toolbar input {
+    flex-grow: 1;
+    padding: 8px;
+    border: 1px solid gray;
+    border-radius: 5px;
+    background-color: rgba(255, 255, 255, 0.7);
+}
+#search_input::placeholder {
+    color: rgb(25, 22, 22);
+}
+
+#search_button {
+    padding: 8px;
+    background-color: goldenrod;
+    color: white;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 36px;
+    height: 36px;
+    text-align: center;
+}
+#search_button:hover {
+    background-color: darkgoldenrod;
+}
+#toggle_advanced_search {
+    margin-top: 10px;
+    padding: 8px 15px;
+    background-color: rgba(65, 65, 65, 0.7);
+    color: white;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+}
+#toggle_advanced_search:hover {
+    background-color: goldenrod;
+}
+#advanced_search {
+    color: white;
+}
+
+#search_results {
+    overflow: auto;
+    max-height: 400px;
+    padding-right: 10px;
+    margin: 10px 0;
+}
+
+#search_results::-webkit-scrollbar {
+    width: 8px;
+}
+
+#search_results::-webkit-scrollbar-thumb {
+    background-color: goldenrod;
+    border-radius: 4px;
+}
+
+#search_results::-webkit-scrollbar-thumb:hover {
+    background-color: darkgoldenrod; 
+}
+
+#search_results::-webkit-scrollbar-track {
+    background-color: #222;
+}
+
+#search_results p{
+    color: white;
+}
+
+#search_results hr {
+    border: none;
+    height: 2px;
+    background-color: white;
+    margin: 20px 0;
+}
+
+
+#search_results ul li {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    background-color: #222;
+    padding: 10px 15px;
+    margin-bottom: 10px;
+    border-radius: 5px;
+    width: calc(100% - 20px);
+    margin-left: auto;
+    margin-right: auto;
+    box-sizing: border-box;
+}
+
+#search_results ul li p {
+    margin: 0;
+    flex-grow: 1;
+    color: white;
+}
+
+#search_results ul li button {
+    flex-shrink: 0;
+    margin-left: 15px;
+    background-color: goldenrod;
+    color: white;
+    border: none;
+    padding: 8px 12px;
+    border-radius: 5px;
+    cursor: pointer;
+}
+
+
+#search_results ul li button:hover {
+    background-color: darkgoldenrod;
+}
+
+#search_results ul li:last-child {
+    margin-bottom: 0;
+}
+
+
+#pagination {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    margin-top: 10px;
+}
+.pagination-row {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    margin-top: 5px;
+}
+
+#pagination button {
+    margin: 0 1px;
+    padding: 4px 9px;
+    background-color: white;
+    color: black;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+}
+#pagination button:hover {
+    background-color: gray;
+}
+
+.reload-button {
+    padding: 8px;
+    background-color: goldenrod;
+    color: white;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 50px;
+    height: 36px;
+    text-align: center;
+    font-size: 30px;
+}
+.reload-button:hover {
+    background-color: darkgoldenrod;
+}

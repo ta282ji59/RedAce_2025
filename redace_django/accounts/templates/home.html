@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    {% load static %}
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Home - RedAce</title>
+    <link rel="stylesheet" href="{% static 'accounts/css/home.css' %}">
+</head>
+
+<body>
+    <div class="layout">
+        <h1 class="logo">Red Ace</h1> 
+        <div class="content">
+            <div class="left">
+                <div class="image-container">
+                    <a href="{% url 'map3d:default' %}" target="_blank">
+                        <img src="{% static 'accounts/images/webgis_screen.png' %}" alt="map3d" class="icon">
+                        <p class="image-text">GIS Application</p>
+                    </a>
+                </div>
+                <div class="image-container">
+                    <a href="http://192.168.1.53:7010/" target="_blank">
+                        <img src="{% static 'accounts/images/jupyterlab_screen.png' %}" alt="Jupyter" class="icon">
+                        <p class="image-text">JupyterHub</p>
+                    </a>
+                </div>
+            </div>
+
+            <div class="right">
+                <div class="project-container">
+                    <p>Login user: {{ user }}</p>
+
+                    <h2>Projects</h2>
+                    {% if projects %}
+                    <ul style="max-height: 200px; overflow-y: auto; border: 1px solid #ccc; padding: 10px;">
+                        {% for project in projects %}
+                        <li>
+                            <strong>Project name:</strong> {{ project.name }}<br>
+                            <strong>Project member:</strong>
+                            <ul>
+                                {% for member in project.member.all %}
+                                <li>{{ member.username }}</li>
+                                {% endfor %}
+                            </ul>
+                        </li>
+                        <hr>
+                        {% endfor %}
+                    </ul>
+                    {% else %}
+                    <p>You don't join any project.<br><strong style="background-color: yellow; color: black;">🚨If you haven't access JupyterHub more than one time, plese access JupyterHub before create or join Projects.</strong></p>
+                    {% endif %}
+                    <div>
+                        <a type="button" href="{% url 'create_project' %}">Create Project</a>
+                    </div>
+                    <div>
+                        <a type="button" href="{% url 'join_project' %}">Join Project</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <p style="text-align: center; margin-top: 20px;">
+            <a href="{% url 'logout_confirm' %}" class="logout-link">Logout</a>
+        </p>        
+    </div>
+</body>
+
+</html>

@@ -1,0 +1,130 @@
+services:
+  # Nginx生成コンテナ
+  nginx:
+    image: redace1/nginx:5.0
+    container_name: redace_nginx
+    ports:
+      - "88:80"
+    volumes:
+      - ./redace_nginx/conf:/etc/nginx/conf.d
+      - ./redace_nginx/uwsgi_params:/etc/nginx/uwsgi_params
+      - ./redace_django/collect_static:/collect_static
+    depends_on:
+      - django
+    networks:
+      redace_network:
+        ipv4_address: 172.16.238.6
+
+  # PostGISデータベース生成コンテナ
+  db:
+    image: postgis/postgis
+    container_name: redace_db
+    environment:
+      - POSTGRES_DB=${POSTGRES_DB}
+      - POSTGRES_USER=${POSTGRES_USER}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
+    ports:
+      - "5432:5432"
+    volumes:
+      - ./db/PostGIS_volume:/var/lib/postgresql/data
+      # - ./csv:/csv
+    networks:
+      redace_network:
+        ipv4_address: 172.16.238.5
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # Django生成コンテナ
+  django:
+    build:
+      context: ./redace_django
+    container_name: redace_django
+    volumes:
+      - ./redace_django:/app
+      - ./redace_jupyter/data:/data
+      - /mars_dataset:/mars_data
+    expose:
+      - "8001"
+    depends_on:
+      - db
+      - mapserver
+      - terrainserver
+    env_file:
+      - ./.env
+    networks:
+      redace_network:
+        ipv4_address: 172.16.238.24
+    command: sh /app/start.sh
+    environment:
+      - POSTGRES_HOST=db
+      - POSTGRES_PORT=5432
+      - OPTIONS="-c search_path=django,public"
+
+  # Jupyter生成コンテナ
+  jupyter:
+    build:
+      context: ./redace_jupyter
+    container_name: redace_jupyter
+    volumes:
+      - ./redace_jupyter:/app
+      - ./redace_jupyter/data:/data
+      - /mars_dataset:/mars_data
+    ports:
+      - "7010:7010"
+    depends_on:
+      - db
+      - django
+    env_file:
+      - ./.env
+    networks:
+      redace_network:
+        ipv4_address: 172.16.238.10
+    environment:
+      - POSTGRES_HOST=db
+      - POSTGRES_PORT=5432
+      - POSTGRES_OPTIONS="-c search_path=jupyterhub,public"
+
+  # CesiumJS 火星レイヤー生成コンテナ
+  mapserver:
+    image: redace1/mapserver:5.0
+    container_name: redace_mapserver
+    volumes:
+      - ./redace_mapserver:/maps
+    depends_on:
+      - db
+    expose:
+      - "80"
+    networks:
+      redace_network:
+        ipv4_address: 172.16.238.3
+
+  # CessiumJS 3D地形生成コンテナ
+  terrainserver:
+    image: redace1/terrainserver:5.0
+    container_name: redace_terrainserver
+    environment:
+      - SERVE_STATIC=0
+    volumes:
+      - /terrain/tilesets/terrain:/data/tilesets/terrain
+    expose:
+      - "8000"
+    networks:
+      redace_network:
+        ipv4_address: 172.16.238.4
+
+
+
+networks:
+  redace_network:
+    name: redace_network
+    driver: bridge
+    ipam:
+      driver: default
+      config:
+        - subnet: 172.16.238.0/24
+
+volumes:
+  pgdata:

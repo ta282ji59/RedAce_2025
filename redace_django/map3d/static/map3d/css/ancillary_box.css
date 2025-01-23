@@ -1,0 +1,22 @@
+/* .ancillary_box {
+    height: 500px;
+}
+.ancillary_box img {
+    position: absolute;
+    left: 10px;
+    width: 180px;
+    height: 180px;
+    object-fit: contain;
+}
+.ancillary_box .obs_name {
+    position: absolute;
+    right: 5px;
+    top: 0px;
+    padding: 0.5em 1em;
+    margin: 2em 0;
+    background-color: rgba(0, 117, 226, 0.7);
+    border-left: solid 10px #ffc06e;
+}
+.button_tra {
+    float: left;
+} */

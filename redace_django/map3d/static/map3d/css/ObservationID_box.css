@@ -1,0 +1,46 @@
+.button_obs {
+    display: inline-block;
+    width: 318px;
+    height: 30px;
+    color: white;
+    font-size: 1.0em;
+    text-align: center;
+    text-decoration: none;
+    line-height: 30px;
+    outline: none;
+    /* background: url('../gahag-0040798691.jpg'); */
+    background:rgba(135,5,34,0.7);
+    background-size: cover;
+    border: 1px solid rgb(244, 133, 133);
+}
+.button_tra {
+    display: inline-block;
+    width: 160px;
+    height:50px;
+    text-align: center;
+    text-decoration: none;
+    background-color: rgba(0, 0, 0, .6);
+    color: #fff;
+}
+.button_tra::before,
+.button::after {
+    position: absolute;
+    z-index: -1;
+    display: block;
+    content: '';
+}
+.button_tra,
+.button_tra::before,
+.button_tra::after {
+    -webkit-box-sizing: border-box;
+    -moz-box-sizing: border-box;
+    box-sizing: border-box;
+    -webkit-transition: all .1s;
+    transition: all .1s;
+}
+.button_tra:hover {
+    background-color: rgba(255, 165, 0, 0.7);
+    cursor: pointer;
+}
+
+

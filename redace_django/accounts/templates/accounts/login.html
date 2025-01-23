@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    {% load static %}
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sign In - Red Ace</title>
+    <link rel="stylesheet" href="{% static 'accounts/css/accounts.css' %}">
+</head>
+
+<body>
+    <h1 class="logo">Red Ace</h1>
+    <div class="container">
+        <h2>Sign In</h2>
+        <p>If you have not created an account yet, then please <a href="{% url 'signup' %}">sign up</a> first.</p>
+        <form method="post">
+            {% csrf_token %}
+            <div class="input">
+                <p>
+                    <label>Username:&nbsp;</label>
+                    <input type="text" name="username" placeholder="Username" required>
+                </p>
+                <p>
+                    <label>Password:&nbsp;</label>
+                    <input type="password" name="password" placeholder="Password" required>
+                </p>
+            </div>
+            <button type="submit">Login</button>
+        </form>
+        <div class="error_message">
+            {% for message in messages %}
+                {% if message == "Invalid username or password" or message == "Create your account perfectly" %}
+                    <p>{{ message }}</p>
+                {% endif %}
+            {% endfor %}
+        </div>
+    </div>
+</body>
+
+</html>

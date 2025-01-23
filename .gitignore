@@ -1,0 +1,25 @@
+csv
+db
+redace_django/collect_static/
+info
+
+
+redace_django/map3d/views/a.py
+
+redace_jupyter/data/groups
+redace_jupyter/data/users/*
+# !redace_jupyter/data/users/tatsuya/
+# !redace_jupyter/data/users/usui/
+# !redace_jupyter/data/users/tatsuya/**
+# !redace_jupyter/data/users/usui/**
+
+
+.env
+*.txt
+?.json
+?.bash
+.DS_Store
+*.pyc
+*.csv
+*.xls
+*.xlsx

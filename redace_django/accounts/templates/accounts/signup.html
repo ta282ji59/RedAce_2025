@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    {% load static %}
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sign Up - Red Ace</title>
+    <link rel="stylesheet" href="{% static 'accounts/css/accounts.css' %}">
+</head>
+
+<body>
+    <h1 class="logo">Red Ace</h1>
+    <div class="container">
+        <h2>Sign Up</h2>
+        <p>Already have an account? Then please <a href="{% url 'login' %}">sign in</a>.</p>
+        <form method="post">
+            {% csrf_token %}
+            <div class="input">
+                {{ form.as_p }}
+            </div>
+            <button type="submit">Sign Up</button>
+        </form>
+    </div>
+</body>
+
+</html>

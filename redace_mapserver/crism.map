@@ -1,0 +1,42 @@
+ Map
+  WEB
+    METADATA
+      "wms_enable_request" "*"
+    End
+  END
+
+#for skelton background
+  IMAGETYPE      PNG24
+  TRANSPARENT    ON
+  OUTPUTFORMAT
+    NAME png24
+    DRIVER "GD/PNG"
+    MIMETYPE "image/png"
+    IMAGEMODE RGBA
+    EXTENSION "png"
+  END
+
+  PROJECTION
+    "init=epsg:4326"
+  END
+
+  LAYER
+    NAME "crism"
+    SIZEUNITS pixels
+    STATUS on 
+
+    CONNECTIONTYPE postgis
+    CONNECTION "user=ta282ji password=triathlon dbname=mars host=172.16.238.5"
+
+
+    PROCESSING "CLOSE_CONNECTION=DEFER"    
+    DATA "footprint FROM crism" 
+    TYPE POLYGON
+    CLASS
+      STYLE
+       ANTIALIAS true 
+        COLOR 255 0 0
+      END
+    END
+  END
+END
