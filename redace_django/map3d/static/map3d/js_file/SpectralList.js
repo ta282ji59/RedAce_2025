@@ -376,7 +376,7 @@ function move_from_list() {
                     },
                     properties: {
                         name: `${instrument}(${obs_id})`,
-                        description: `<div style="height:500px;"><p>This pin may be slightly out of specification. ...</p></div>`,
+                        description: `<div style="height:500px;"><p>This pin may be slightly out of specification. Please consider it as a guide only.<br><br>If you want to search Obs. data(CRISM or THEMIS) in more detail, click the second button from the top left of the screen.</p><img src="/collect_static//map3d/image/sample_button.gif" width="80%"></div>`,
                     },
                 },
             ],
