@@ -9,7 +9,7 @@
  */
 function save_spectral(counter) {
     const modalHTML = `
-        <div class="modal fade" id="dynamicModal" tabindex="-1" aria-hidden="true" data-bs-backdrop="static">
+        <div class="modal fade" id="dynamicModal" tabindex="-1" aria-hidden="true" data-bs-backdrop="static" style="z-index: 9999;">
           <div class="modal-dialog modal-dialog-centered">
             <div class="modal-content">
               <div class="modal-header" id="modalHeader" style="display: none;">
@@ -19,6 +19,7 @@ function save_spectral(counter) {
                 <img src="/collect_static/map3d/image/loading.gif" alt="Loading..."><br>
                 <span id="loadingText">Loading...</span>
               </div>
+              <div class="modal-footer" id="modalFooter"></div>
             </div>
           </div>
         </div>
@@ -36,6 +37,7 @@ function save_spectral(counter) {
     let description = document.getElementById(`save_memo_${graphCounter}`).value;
 
     if (description.length <= 100) {
+        console.log(dataSave[counter])
         $.ajax({
             type: 'POST',
             headers: { 'X-CSRFToken': csrftoken },
@@ -50,6 +52,7 @@ function save_spectral(counter) {
                     document.getElementById(`save_memo_${graphCounter}`).value = '';
                     get_record_spectra();
                     document.getElementById('modalBody').innerHTML = '<h3>Save completed!!!</h3>';
+                    document.getElementById('modalFooter').innerHTML = '<button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button><button type="button" class="btn btn-primary" data-bs-dismiss="modal" onclick="change_display()">Check to Save list</button>';
                     enableModalClose(modalElement);
                 } 
                 else {

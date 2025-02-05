@@ -1,7 +1,28 @@
 // このコードを読み込んだら自動実行する関数
 document.addEventListener("DOMContentLoaded", () => {
     get_record_spectra();
+    change_display();
 });
+
+function change_display(){
+    const change_display_button = document.getElementById("change_display_button")
+    const button_text = change_display_button.innerText;
+
+    const spectral_graph = document.getElementById("spectral_graph")
+    const save_list = document.getElementById("save_list")
+    if(button_text == "Change to 'Save list'"){
+        change_display_button.innerText = "Change to 'Graph list'";
+        spectral_graph.style.display = 'block'
+        save_list.style.display = 'none'
+        spectral_graph.style.height = "auto";
+    }
+    else if(button_text == "Change to 'Graph list'"){
+        change_display_button.innerText = "Change to 'Save list'";
+        spectral_graph.style.display = 'none'
+        save_list.style.display = 'block'
+        save_list.style.height = "auto";
+    }
+}
 
 // ユーザー・Project情報取得
 function user_info() {
@@ -79,7 +100,9 @@ function table_info() {
                   <th scope="col" width="140">${created_date}</th>
                   <th scope="col" width="270">${edit_des}</th>
                   <th scope="col" width="40" style="text-align: center; vertical-align: middle;">
-                    <input type="checkbox" style="transform: scale(1.5);" onclick="event.stopPropagation();">
+                    <button type="submit" id="move-btn" onclick="move_from_list('${row.instrument}', '${row.instrument}', '${row.data_id}', ${row.latitude[0]}, ${row.longitude[0]});">
+                        <i class="fas fa-location-arrow" style="color: black;" onMouseOut="this.style.color='black';" onMouseOver="this.style.color='Red';"></i></button></th>
+                    </button>
                   </th>
                   <th scope="col" width="40" style="text-align: center; vertical-align: middle;">
                     <input type="checkbox" style="transform: scale(1.5);" onclick="event.stopPropagation();">
@@ -117,7 +140,11 @@ function table_info() {
                 `;
 
                 // クリック時のイベント
-                tr.addEventListener("click", () => {
+                tr.addEventListener("click", (event) => {
+                    // button,checkboxをクリックしても反応しないようにする
+                    if (event.target.tagName === "BUTTON" || event.target.tagName === "INPUT") {
+                        return;
+                    }
                     if (graphRow.style.display === "none") {
                         graphRow.style.display = "";
                         const graphContainer = document.getElementById(`graph-container-${index}`);
@@ -126,7 +153,7 @@ function table_info() {
                             // 別関数でグラフ生成 (row.id を使ってサーバーにデータを取りにいく)
                             createGraph(row.id, `graph-container-${index}`);
                         }
-                    } 
+                    }
                     else {
                         graphRow.style.display = "none";
                     }
@@ -278,16 +305,57 @@ function formatDate(isoDateString) {
 function get_record_spectra() {
     user_info();
     table_info();
+    document.querySelector('#export_all button').className = 'btn btn-warning'
+    document.querySelector('#delete_all button').className = 'btn btn-warning'
 }
 
 /* =========================================
    MOVE / EXPORT / DELETE 関数
    ========================================= */
 
+// 任意の列のチェックボックスを全てチェックする関数
+function all_checked(row_name) {
+    const rows = document.querySelectorAll('#table-body > tr');
+    let row_number,button;
+
+    if (row_name === 'export') {
+        row_number = 1;
+        button = document.querySelector('#export_all button');
+    } else if (row_name === 'delete') {
+        row_number = 2;
+        button = document.querySelector('#delete_all button');
+    }
+
+    if (row_number) {
+        let allChecked = true;
+
+        // すべてのチェックボックスの状態を確認
+        for (const row of rows) {
+            const checkboxes = row.querySelectorAll('th input[type="checkbox"]');
+            if (checkboxes.length >= row_number) {
+                if (!checkboxes[row_number - 1].checked) {
+                    allChecked = false;
+                    break;
+                }
+            }
+        }
+
+        // 全チェック済みなら外し、そうでなければ全チェックする
+        for (const row of rows) {
+            const checkboxes = row.querySelectorAll('th input[type="checkbox"]');
+            if (checkboxes.length >= row_number) {
+                checkboxes[row_number - 1].checked = !allChecked;
+            }
+        }
+        
+        button.className = allChecked ? 'btn btn-warning' : 'btn btn-primary';
+    }
+}
+
+
 function countCheckboxes(columnIndex) {
-    // columnIndex=0 _ MOVE
-    // columnIndex=1 _ EXPORT
-    // columnIndex=2 _ DELETE
+    // columnIndex=0 _ EXPORT
+    // columnIndex=1 _ DELETE
 
     let count = 0;
     const rows = document.querySelectorAll('#table-body > tr');
@@ -297,22 +365,23 @@ function countCheckboxes(columnIndex) {
         const checkboxes = row.querySelectorAll('th input[type="checkbox"]');
         const dataId = row.getAttribute("data-id");
 
-        if (columnIndex === 0 && count >= 2) {
-            break;
-        }
+        // if (columnIndex === 0 && count >= 2) {
+        //     break;
+        // }
 
         if (checkboxes.length > columnIndex && checkboxes[columnIndex].checked) {
             const rowData = data_copy.find(d => d.id === parseInt(dataId, 10));
             if (rowData) {
-                if (columnIndex === 0) { // MOVE
-                    saveList.push({
-                        instrument: rowData.instrument,
-                        obs_id: rowData.obs_id,
-                        latitude: rowData.latitude,
-                        longitude: rowData.longitude,
-                    });
-                }
-                else if (columnIndex === 1) { // EXPORT
+                // if (columnIndex === 0) { // MOVE
+                //     saveList.push({
+                //         instrument: rowData.instrument,
+                //         obs_id: rowData.obs_id,
+                //         latitude: rowData.latitude,
+                //         longitude: rowData.longitude,
+                //     });
+                // }
+                // else if (columnIndex === 1) { // EXPORT
+                if (columnIndex === 0) { // EXPORT
                     let p = document.getElementById("export_list").value;
                     let owner = false;
                     let username = first_setting().username;
@@ -337,7 +406,7 @@ function countCheckboxes(columnIndex) {
                         description: rowData.description,
                     });
                 }
-                else if (columnIndex === 2) { // DELETE
+                else if (columnIndex === 1) { // DELETE
                     saveList.push({ id: rowData.id });
                 }
                 count++;
@@ -345,74 +414,78 @@ function countCheckboxes(columnIndex) {
         }
     }
 
-    if (count == 0) {
-        alert("Please check any check-box");
-    }
+    // if (count == 0) {
+    //     alert("Please check any check-box");
+    // }
     return saveList;
 }
 
 let currentGeoJson = null; // 現在の GeoJSON データを追跡
 
-function move_from_list() {
-    const moveRows = countCheckboxes(0);
-    if (moveRows.length === 1) {
-        console.log(moveRows);
-
-        const targetLocation = moveRows[0];
-        const instrument = targetLocation.instrument;
-        const obs_id = targetLocation.obs_id;
-        const latitude = targetLocation.latitude[0];
-        const longitude = targetLocation.longitude[0];
-
-        // GeoJSON データ作成
-        const geojson = {
-            type: "FeatureCollection",
-            features: [
-                {
-                    type: "Feature",
-                    geometry: {
-                        type: "Point",
-                        coordinates: [longitude, latitude],
-                    },
-                    properties: {
-                        name: `${instrument}(${obs_id})`,
-                        description: `<div style="height:500px;"><p>This pin may be slightly out of specification. Please consider it as a guide only.<br><br>If you want to search Obs. data(CRISM or THEMIS) in more detail, click the second button from the top left of the screen.</p><img src="/collect_static//map3d/image/sample_button.gif" width="80%"></div>`,
-                    },
-                },
-            ],
-        };
-
-        if (currentGeoJson) {
-            roots.map.dataSources.remove(currentGeoJson);
-            currentGeoJson = null;
+function move_from_list(instrument, instrument, obs_id, latitude, longitude) {
+    // CRISM か THEMIS のチェックをオンにする
+    layer_check.layers.forEach(function (layer) {
+        if (layer.name === instrument) {
+            layer.show = true; // Cesium のレイヤーの表示を有効にする
         }
+    });
+    
+    // latitude,longtitudeは座標を示す。sub_latは表示のずれ対策で補正している。数値的には正しい座標ではない(search.jsのdisplayAllPins関数でも似たようなことをしている)
+    if(latitude < 80 && latitude > 0){
+        sub_lat = latitude+0.1;
+    }
+    else if(latitude > -80 && latitude < 0){
+        sub_lat = latitude-0.1;
+    }
+    else{
+        sub_lat = latitude;
+    }
 
-        Cesium.GeoJsonDataSource.load(geojson, {
-            markerColor: Cesium.Color.PINK,
-            clampToGround: true,
-        }).then(function (dataSource) {
-            currentGeoJson = dataSource;
-            roots.map.dataSources.add(dataSource);
+    // GeoJSON データ作成
+    const geojson = {
+        type: "FeatureCollection",
+        features: [
+            {
+                type: "Feature",
+                geometry: {
+                    type: "Point",
+                    coordinates: [longitude, sub_lat],
+                },
+                properties: {
+                    name: `${instrument}(${obs_id})`,
+                    // name: `${instrument}`,
+                    // description: `<div style="height:500px;"><p>This pin may be slightly out of specification. Please consider it as a guide only.<br><br>If you want to search Obs. data(CRISM or THEMIS) in more detail, click the second button from the top left of the screen.</p><img src="/collect_static//map3d/image/sample_button.gif" width="80%"></div>`,
+                },
+            },
+        ],
+    };
 
-            const entity = dataSource.entities.values[0];
-            if (entity) {
-                roots.map.selectedEntity = entity;
-                roots.map.camera.flyTo({
-                    destination: Cesium.Cartesian3.fromDegrees(longitude, latitude, 1500000),
-                });
-            }
-        });
+    if (currentGeoJson) {
+        roots.map.dataSources.remove(currentGeoJson);
+        currentGeoJson = null;
     }
-    else if (moveRows.length > 1) {
-        alert("If you want to use 'move_function', please check only one check-box.");
-    }
-    else {
-        alert("No row selected for move functionality.");
-    }
+
+    Cesium.GeoJsonDataSource.load(geojson, {
+        markerColor: Cesium.Color.PINK,
+        clampToGround: true,
+    }).then(function (dataSource) {
+        currentGeoJson = dataSource;
+        roots.map.dataSources.add(dataSource);
+
+        const entity = dataSource.entities.values[0];
+        if (entity) {
+            roots.map.selectedEntity = entity;
+            roots.map.camera.flyTo({
+                destination: Cesium.Cartesian3.fromDegrees(longitude, latitude, 1500000),
+            });
+        }
+    });
+
+    fetchDataClickedCoordinates(longitude, latitude);
 }
 
 function export_from_list() {
-    const exportRows = countCheckboxes(1);
+    const exportRows = countCheckboxes(0);
     if (exportRows.length > 0) {
         const modalHTML = `
         <div class="modal fade" id="dynamicModal" tabindex="-1" aria-hidden="true" data-bs-backdrop="static" style="z-index: 9999; background-color: rgba(0, 0, 0, 0.5);">
@@ -425,8 +498,8 @@ function export_from_list() {
                 <p>Do you want to export ${exportRows.length} data?</p>
               </div>
               <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">キャンセル</button>
-                <button type="button" class="btn btn-primary" id="confirmExport">転送</button>
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-primary" id="confirmExport">Export</button>
               </div>
             </div>
           </div>
@@ -461,7 +534,9 @@ function export_from_list() {
                         <p style="text-align: left; white-space: pre-line;">JupyterHub directory<br>${successMessage}</p>
                     `;
                     document.querySelector('#dynamicModal .modal-footer').innerHTML = `
-                        <button type="button" class="btn btn-primary" data-bs-dismiss="modal">OK</button>
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Closed</button>
+                        <button type="button" class="btn btn-success"  data-bs-dismiss="modal" onclick="window.open('http://192.168.1.53:7010/', '_blank')">Open JupyterHub</button>
+
                     `;
                 })
                 .catch((error) => {
@@ -474,7 +549,7 @@ function export_from_list() {
                     `;
                 });
         });
-    } 
+    }
     else {
         alert("Please check any check-box");
     }
@@ -497,7 +572,7 @@ function handleExport(exportRows) {
                             row.wavelength = firstItem.wavelength || [];
                             row.reflectance = firstItem.reflectance || [];
                             resolveInner();
-                        } 
+                        }
                         else {
                             rejectInner("Invalid data structure.");
                         }
@@ -525,7 +600,7 @@ function handleExport(exportRows) {
                                 .map((result) => `${result.file}`)
                                 .join('\n\n');
                             resolve(successMessages);
-                        } 
+                        }
                         else {
                             reject("Export succeeded, but no results were returned.");
                         }
@@ -542,7 +617,7 @@ function handleExport(exportRows) {
 }
 
 function delete_from_list() {
-    const deleteRows = countCheckboxes(2);
+    const deleteRows = countCheckboxes(1);
     if (deleteRows.length > 0) {
         const modalHTML = `
         <div class="modal fade" id="deleteModal" tabindex="-1" aria-hidden="true" data-bs-backdrop="static" style="z-index: 9999; background-color: rgb(0 0 0 / .5);">
