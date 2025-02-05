@@ -35,7 +35,7 @@
     CLASS
       STYLE
        ANTIALIAS true 
-        COLOR 0 0 255
+        COLOR 255 0 255
       END
     END
   END
