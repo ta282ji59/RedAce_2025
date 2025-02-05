@@ -224,6 +224,14 @@ function search() {
             loadingElement.style.display = "none";
             // 検索結果を表示する処理
             if (response.data && response.data.length > 0) {
+                // CRISM と THEMIS のチェックをオンにする
+                layer_check.layers.forEach(function (layer) {
+                    // if (layer.name === "CRISM" || layer.name === "THEMIS") {
+                    if (layer.name === "CRISM") {
+                        layer.show = true; // Cesium のレイヤーの表示を有効にする
+                    }
+                });
+
                 console.log("検索結果:", response.data);
                 result_title.innerHTML = `Results<br><strong>${response.data.length} Hit!</strong>`;
 
@@ -409,17 +417,29 @@ function displayAllPins(data, check) {
         currentGeoJson = null;
     }
     else {
+        // lat,lonは座標を示す。sub_latは表示のずれ対策で補正している。数値的には正しい座標ではない(SpectralList.jsのmove_from_list関数でも似たようなことをしている)
+        for(let i = 0;i<data.length;i++){
+            if(data[i].lat < 80 && data[i].lat>0){
+                data[i].sub_lat = data[i].lat+0.1;
+            }
+            else if(data[i].lat > -80 && data[i].lat < 0){
+                data[i].sub_lat = data[i].lat-0.1;
+            }
+            else{
+                data[i].sub_lat = data[i].lat;
+            }
+        }
         const geojson = {
             type: "FeatureCollection",
             features: data.map((item) => ({
                 type: "Feature",
                 geometry: {
                     type: "Point",
-                    coordinates: [item.lon, item.lat],
+                    coordinates: [item.lon, item.sub_lat],
                 },
                 properties: {
                     name: item.name,
-                    description: `<div style="height:500px;"><p>This pin may be slightly out of specification. Please consider it as a guide only.<br><br>If you want to search Obs. data(CRISM or THEMIS) in more detail, click the second button from the top left of the screen.</p><img src="/collect_static//map3d/image/sample_button.gif" width="80%"></div>`,
+                    // description: `<div style="height:500px;"><p>This pin may be slightly out of specification. Please consider it as a guide only.<br><br>If you want to search Obs. data(CRISM or THEMIS) in more detail, click the second button from the top left of the screen.</p><img src="/collect_static//map3d/image/sample_button.gif" width="80%"></div>`,
                 },
             })),
         };
@@ -438,13 +458,14 @@ function displayAllPins(data, check) {
         });
 
     }
-
 }
 
 // クリック時にピンの色を変更する処理
 function move_from_list_search(item) {
     const latitude = item.lat;
     const longitude = item.lon;
+
+    fetchDataClickedCoordinates(longitude, latitude);
 
     if (currentGeoJson) {
         // すべてのピンを青色にリセット
@@ -489,6 +510,6 @@ function reset_search() {
     ul.innerHTML = '';
 
     displayAllPins(null, false);
-    
+
     document.getElementById("search_input").value = '';
 }
