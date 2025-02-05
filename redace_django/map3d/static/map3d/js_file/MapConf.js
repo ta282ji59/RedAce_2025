@@ -313,7 +313,7 @@ function init_map() {
                 },
             }),
             0.6,
-            false
+            true
         );
         addAdditionalLayerOption(
             'THEMIS', //Red Ace postGIS at docker network
