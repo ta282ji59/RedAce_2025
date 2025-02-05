@@ -56,19 +56,11 @@
         </button>
         <div class="collapse navbar-collapse" id="navbarSupportedContent">
           <ul class="navbar-nav me-auto mb-2 mb-lg-0">
-            <li class="nav-item dropdown">
-              <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false"
-                style="color:white;">
-                Link
-              </a>
-              <ul class="dropdown-menu">
-                <li><a class="dropdown-item" href="#">Action</a></li>
-                <li><a class="dropdown-item" href="#">Another action</a></li>
-                <li>
-                  <hr class="dropdown-divider">
-                </li>
-                <li><a class="dropdown-item" href="#">Something else here</a></li>
-              </ul>
+            <li class="nav-item">
+              <a class="nav-link" target="_blank" href="{% url 'home' %}" style="color:white;">Home</a>
+            </li>
+            <li class="nav-item">
+              <a class="nav-link" target="_blank" href="http://192.168.1.53:7010/" style="color:white;">JupyterHub</a>
             </li>
             <li class="nav-item dropdown">
               <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false"
@@ -76,12 +68,27 @@
                 PDS Link
               </a>
               <ul class="dropdown-menu">
-                <li><a class="dropdown-item" href="#">Action</a></li>
-                <li><a class="dropdown-item" href="#">Another action</a></li>
+                <li><a class="dropdown-item" target="_blank" href="https://pds-geosciences.wustl.edu/missions/mro/crism.htm">・CRISM</a></li>
+                <li><a class="dropdown-item" target="_blank" href="https://static.mars.asu.edu/pds/">・THEMIS</a></li>
+                <li><a class="dropdown-item" target="_blank" href="https://pds-geosciences.wustl.edu/missions/mro/sharad.htm">・SHARAD</a></li>
+                <!-- <li>
+                  <hr class="dropdown-divider">
+                </li>
+                <li><a class="dropdown-item" href="#">Something else here</a></li> -->
+              </ul>
+            </li>
+            <li class="nav-item dropdown">
+              <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false"
+                style="color:white;">
+                Link
+              </a>
+              <ul class="dropdown-menu">
+                <li><a class="dropdown-item" target="_blank" href="https://ode.rsl.wustl.edu/mars/index.aspx">Mars Orbital Data Explorer</a></li>
+                <!-- <li><a class="dropdown-item" href="#">Another action</a></li>
                 <li>
                   <hr class="dropdown-divider">
                 </li>
-                <li><a class="dropdown-item" href="#">Something else here</a></li>
+                <li><a class="dropdown-item" href="#">Something else here</a></li> -->
               </ul>
             </li>
             <li class="nav-item dropdown">
@@ -90,19 +97,13 @@
                 Works
               </a>
               <ul class="dropdown-menu">
-                <li><a class="dropdown-item" href="#">Action</a></li>
-                <li><a class="dropdown-item" href="#">Another action</a></li>
+                <li><a class="dropdown-item" href="#">-</a></li>
+                <li><a class="dropdown-item" href="#">-</a></li>
                 <li>
                   <hr class="dropdown-divider">
                 </li>
-                <li><a class="dropdown-item" href="#">Something else here</a></li>
+                <li><a class="dropdown-item" href="#">-</a></li>
               </ul>
-            </li>
-            <li class="nav-item">
-              <a class="nav-link" href="#" style="color:white;">Red Ace</a>
-            </li>
-            <li class="nav-item">
-              <a class="nav-link" href="http://192.168.1.53:8000" style="color:white;">JupyterHub</a>
             </li>
           </ul>
         </div>
@@ -150,8 +151,7 @@
           <hr>
           <div style="display: flex; align-items: center;">
             <label for="tagSelector" style="margin-right: 10px;">Feature Type</label>
-            <select id="tagSelector_type" style="flex-shrink: 0;"
-              onchange="featureChanged('type', this.options[this.selectedIndex].id);">
+            <select id="tagSelector_type" style="flex-shrink: 0;" onchange="featureChanged('type', this.options[this.selectedIndex].id);">
               <option id="not">-- Select Feature Type --</option>
               <option id="AA">Crater</option>
               <option id="AL">Albedo Feature</option>
@@ -213,9 +213,6 @@
     </div>
   </div>
 
-
-
-
   <!-- Layer Menu -->
   <div class="layer_menu">
     <input id="layer_menu_toggle" type="checkbox">
@@ -270,9 +267,10 @@
   <!-- Spectral loading END -->
 
   <div id="main">
-    <div id="map" style=" position:absolute; top:0px; left:0px; font-size:100%; clear: both;width: 100%;height: 97%">
+    <!-- <div id="map" style=" position:absolute; top:0px; left:0px; font-size:100%; clear: both;width: 100%;height: 97%"> -->
+    <div id="map" style=" position:absolute; top:0px; left:0px; font-size:100%; clear: both;width: 100%;height: 100%; overflow: hidden;">
       <!-- Spectral box -->
-      <div id="graph_move">
+      <!-- <div id="graph_move">
         <input id="graph_1" type="radio" value="graph_tab1" name="tab_item" checked>
         <label class="tab_item" id="graph_tab1" for="graph_1">Spectral 1</label>
         <input id="graph_2" type="radio" value="graph_tab2" name="tab_item">
@@ -299,7 +297,7 @@
           </div>
         </div>
       </div>
-      <div id="download_csv" style="position:absolute; top:250%; left:10px; "></div>
+      <div id="download_csv" style="position:absolute; top:250%; left:10px; "></div> -->
       <!-- Spectral box END-->
 
       <!-- Thumbnail box -->
@@ -316,15 +314,53 @@
 
   <!-- Spectral List Menu -->
   <script type="text/javascript" src='{% static "node_modules/dygraphs/dist/dygraph.js" %}'></script>
-  <div class="spctral_list">
+  <div class="spectral_list">
     <input id="spectral_list_toggle" type="checkbox">
     <label id="spectral_list_open" for="spectral_list_toggle"><span>Spectral List</span></label>
     <div class="spectral_list_contents">
       <div>
         <label id="spectral_list_close" for="spectral_list_toggle"><i class="fa fa-times"></i></label>
       </div>
-      <ul>
-        <span>
+
+      <div class="row">
+        <div class="col-5" style="padding-left: 3%;">
+          <button type="button" class="btn btn-info" id="change_display_button" onclick="change_display()">Change to 'Save list'</button>
+        </div>
+        <br><br><hr>
+      </div>
+
+      <div id="spectral_graph">
+        <div id="graph_move">
+          <input id="graph_1" type="radio" value="graph_tab1" name="tab_item" checked>
+          <label class="tab_item" id="graph_tab1" for="graph_1">Spectral 1</label>
+          <input id="graph_2" type="radio" value="graph_tab2" name="tab_item">
+          <label class="tab_item" id="graph_tab2" for="graph_2">Spectral 2</label>
+          <input id="graph_3" type="radio" value="graph_tab3" name="tab_item">
+          <label class="tab_item" id="graph_tab3" for="graph_3">Spectral 3</label>
+  
+          <div class="tab_content" id="graph_1_content">
+            <div class="graph_area">
+              <div id="graph" class="graph1"></div>
+              <div id="labels1"></div>
+            </div>
+          </div>
+          <div class="tab_content" id="graph_2_content">
+            <div class="graph_area">
+              <div id="graph" class="graph2"></div>
+              <div id="labels2"></div>
+            </div>
+          </div>
+          <div class="tab_content" id="graph_3_content">
+            <div class="graph_area">
+              <div id="graph" class="graph3"></div>
+              <div id="labels3"></div>
+            </div>
+          </div>
+        </div>
+        <div id="download_csv" style="position:absolute; top:250%; left:10px; "></div>
+      </div>
+      <div id="save_list">
+        <ul>
           <div class="right_menu">
             <div id="app_vue">
               <div class="row mb-1">
@@ -335,21 +371,18 @@
                   </div>
                 </div>
               </div>
-
+              
               <div class="row">
                 <div class="col-5">
                   <div class="input-group input-group-sm">
                     <span class="input-group-text">Export destination</span>
-                    <select class="form-select form-select-sm col-auto" id="export_list"
-                      aria-label=".form-select-sm example" name="export_select">
-                    </select>
+                    <select class="form-select form-select-sm col-auto" id="export_list" aria-label=".form-select-sm example" name="export_select"></select>
                   </div>
                 </div>
                 <div class="col-4">
                   <div class="input-group input-group-sm">
                     <span class="input-group-text">CSV format</span>
-                    <select class="form-select form-select-sm col-auto" id="csv_format_list"
-                      aria-label=".form-select-sm example" name="export_select">
+                    <select class="form-select form-select-sm col-auto" id="csv_format_list" aria-label=".form-select-sm example" name="export_select">
                       <option value="merged1">Merged(pattern_1)</option>
                       <!-- <option value="merged2">Merged(pattern_2)</option> -->
                       <option value="separate1">Separate(pattern_1)</option>
@@ -360,41 +393,42 @@
               </div>
             </div>
             <br>
-
-
             <div style="position: relative;">
-              <div id="loading-results"
-                style="display: none; position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(255, 255, 255, 0.8); z-index: 10; text-align: center;">
-                <img src="{% static '/map3d/image/loading.gif' %}" alt="Loading..."
-                  style="width: 25px; height: 25px; margin-top: 50px;">
+              <div id="loading-results" style="display: none; position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(255, 255, 255, 0.8); z-index: 10; text-align: center;">
+                <img src="{% static '/map3d/image/loading.gif' %}" alt="Loading..." style="width: 25px; height: 25px; margin-top: 50px;">
               </div>
-
               <table class="table table-sm table-bordered scroll-contents-title" border="1" style="margin:0;">
                 <thead>
+                  <tr>
+                    <th scope="col" width="50" style="background-color: transparent;"></th>
+                    <th scope="col" width="200" style="background-color: transparent;"></th>
+                    <th scope="col" width="140" style="background-color: transparent;"></th>
+                    <th scope="col" width="140" style="background-color: transparent;"></th>
+                    <th scope="col" width="270" style="background-color: transparent;"></th>
+                    <th scope="col" width="40" style="background-color: transparent;"></th>
+                    <th scope="col" width="40" id="export_all"><button type="submit" class="btn btn-warning" onclick="all_checked('export')">ALL</button></th>
+                    <th scope="col" width="30" id="delete_all"><button type="submit" class="btn btn-warning" onclick="all_checked('delete')">ALL</button></th>
+                  </tr>
                   <tr>
                     <th scope="col" width="50">Instrument</th>
                     <th scope="col" width="200">ID</th>
                     <th scope="col" width="140">(lat,lon)</th>
                     <th scope="col" width="140">Create time</th>
                     <th scope="col" width="270">Note</th>
-                    <th scope="col" width="40"><button type="submit" id="move-btn" onclick="move_from_list();"><i
-                          class="fas fa-location-arrow"></i></button></th>
-                    <th scope="col" width="40"><button type="submit" id="export-btn" onclick="export_from_list();"><i
-                          class="fa fa-file-export"></i></button></th>
-                    <th scope="col" width="30"><button type="submit" id="delete-btn" onclick="delete_from_list();"><i
-                          class="fa fa-trash-alt"></i></button></th>
+                    <th scope="col" width="40">Move</th>
+                    <th scope="col" width="40"><button type="submit" id="export-btn" onclick="export_from_list();"><i class="fa fa-file-export" style="color: black;" onMouseOut="this.style.color='black';" onMouseOver="this.style.color='Red';"></i></button></th>
+                    <th scope="col" width="30"><button type="submit" id="delete-btn" onclick="delete_from_list();"><i class="fa fa-trash-alt" style="color: black;" onMouseOut="this.style.color='black';" onMouseOver="this.style.color='Red';"></i></button></th>
                   </tr>
                 </thead>
                 <tbody id="table-body"></tbody>
               </table>
             </div>
           </div>
+        </ul>
+      </div>
     </div>
-    </span>
-    </ul>
   </div>
-  </div>
-  <!-- Spectral List Menu END-->
+    <!-- Spectral List Menu END-->
 </body>
 
 
