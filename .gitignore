@@ -23,3 +23,5 @@ redace_jupyter/data/users/*
 *.csv
 *.xls
 *.xlsx
+
+vis_checker.*
