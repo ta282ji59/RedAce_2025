@@ -46,6 +46,7 @@ services:
       - ./redace_django:/app
       - ./redace_jupyter/data:/data
       - /mars_dataset:/mars_data
+      - /mars_dataset_png:/mars_data_png
     expose:
       - "8001"
     depends_on:

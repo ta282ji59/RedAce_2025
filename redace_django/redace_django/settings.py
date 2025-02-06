@@ -74,7 +74,7 @@ TEMPLATES = [
 WSGI_APPLICATION = 'redace_django.wsgi.application'
 
 
-# データベース設定(🙇.envを使用して欲しい)
+# データベース設定(.envを使用して欲しい)
 DATABASES = {
     'default': {
         'ENGINE': 'django.contrib.gis.db.backends.postgis',
@@ -144,7 +144,7 @@ USE_TZ = True
 STATIC_URL = '/collect_static/'
 
 STATICFILES_DIRS = [
-    ('mars_data', '/mars_data'),
+    ('mars_data', '/mars_data_png'),
 ]
 STATIC_ROOT = os.path.join(BASE_DIR, 'collect_static/') 
 
