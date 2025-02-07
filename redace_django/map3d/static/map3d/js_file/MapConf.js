@@ -466,7 +466,7 @@ function init_map() {
         var upTime = new Date().getTime();
         if (upTime - downTime < 200) {
             if (cartesian_event) {
-                fetchDataClickedCoordinates(lon_event, lat_event);
+                fetchDataClickedCoordinates(lon_event, lat_event,'');
             }
         }
         roots.map.canvas.removeEventListener('pointerup', onMouseUp);
@@ -511,3 +511,14 @@ function getMousePosition() {
         }
     }, Cesium.ScreenSpaceEventType.MOUSE_MOVE);
 }
+
+
+// 検索する際の半径をセッティングする
+const rangeInput = document.getElementById("rangeInput");
+const numberInput = document.getElementById("numberInput");
+rangeInput.addEventListener("input", () => {
+    numberInput.value = rangeInput.value;
+});
+numberInput.addEventListener("input", () => {
+    rangeInput.value = numberInput.value;
+});

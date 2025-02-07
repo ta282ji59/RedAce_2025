@@ -64,18 +64,30 @@ let csrftoken = getCookie('csrftoken');
  * @param {*} lat 
  * @returns 
  */
-function fetchDataClickedCoordinates(lon, lat) {
-    let radiusCircle = Math.abs(document.getElementById('circle_mouse').value);
+function fetchDataClickedCoordinates(lon, lat, checker) {
+    let radiusCircle;
+    const range = document.getElementById("rangeInput").value;
+    if(checker == 'search'){
+        radiusCircle = 0;
+    }
+    else if(range >= 0){
+        radiusCircle = range*1000;
+    }
+    else{
+        radiusCircle = Math.abs(document.getElementById('circle_mouse').value);
+    }
     roots.map.entities.remove(clickCircle);
     getMousePosition();
     clickCircle = roots.map.entities.add({
         position: Cesium.Cartesian3.fromDegrees(lon, lat, 0, roots.map.scene.globe.ellipsoid, new Cesium.Cartesian3()),
-        name: 'Green circle at height with outline',
         ellipse: {
             semiMinorAxis: radiusCircle,
             semiMajorAxis: radiusCircle,
             height: -2975000,
-            material: Cesium.Color.CYAN.withAlpha(0.6),
+            material: Cesium.Color.CHARTREUSE.withAlpha(0.6),
+            outline: true,
+            outlineColor: Cesium.Color.BLACK,
+            outlineWidth: 150,
         },
     });
 
@@ -175,6 +187,26 @@ function displayObsIdBox(data) {
         let obsCount = 0;
         let idSet = document.getElementById('IDArea');
         idSet.innerHTML = '';
+        
+        let offsetX, offsetY, isDragging = false;
+
+        idSet.addEventListener("mousedown", (e) => {
+            isDragging = true;
+            offsetX = e.clientX - idSet.offsetLeft;
+            offsetY = e.clientY - idSet.offsetTop;
+            idSet.style.cursor = "grabbing";
+        });
+
+        document.addEventListener("mousemove", (e) => {
+            if (!isDragging) return;
+            idSet.style.left = `${e.clientX - offsetX}px`;
+            idSet.style.top = `${e.clientY - offsetY}px`;
+        });
+
+        document.addEventListener("mouseup", () => {
+            isDragging = false;
+            idSet.style.cursor = "grab";
+        });
 
         for (let j = 0; j < dataObject['hit_data'].length; j++) {
             let obsName = dataObject['hit_data'][j][0]['features'][0]['properties']['name'];

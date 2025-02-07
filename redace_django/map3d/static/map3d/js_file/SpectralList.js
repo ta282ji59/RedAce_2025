@@ -481,7 +481,7 @@ function move_from_list(instrument, instrument, obs_id, latitude, longitude) {
         }
     });
 
-    fetchDataClickedCoordinates(longitude, latitude);
+    fetchDataClickedCoordinates(longitude, latitude,'');
 }
 
 function export_from_list() {

@@ -465,7 +465,7 @@ function move_from_list_search(item) {
     const latitude = item.lat;
     const longitude = item.lon;
 
-    fetchDataClickedCoordinates(longitude, latitude);
+    fetchDataClickedCoordinates(longitude, latitude, 'search');
 
     if (currentGeoJson) {
         // すべてのピンを青色にリセット

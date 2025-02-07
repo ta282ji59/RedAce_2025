@@ -19,8 +19,11 @@
     height:50px;
     text-align: center;
     text-decoration: none;
-    background-color: rgba(0, 0, 0, .6);
+    background-color: black;
     color: #fff;
+
+    font-size: min(13px, 5vw); /* 16px以下にならないように自動調整 */
+    line-height: 50px; /* ボタンの高さに合わせて中央寄せ */
 }
 .button_tra::before,
 .button::after {

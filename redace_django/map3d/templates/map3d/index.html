@@ -247,8 +247,15 @@
       <div class="rangeTerrain">
         <p>&emsp;Terrain magnification
           &emsp;0&nbsp;
-          <input type="range" value="2" min="0" max="20" step="2" onchange="terrain_magni(this.value)" />
+          <input type="range" value="0" min="0" max="20" step="2" onchange="terrain_magni(this.value)" />
           &nbsp;20
+        </p>
+      </div>
+      <div class="rangeRectangle">
+        <p>&emsp;Search range(km)
+          <input type="number" id="numberInput" value="0" min="0" max="1500" step="1" style="width: 55px;"/>
+          <input type="range" id="rangeInput" value="0" min="0" max="1500" step="1"/>
+          1500
         </p>
       </div>
     </div>
@@ -310,7 +317,8 @@
 
   <!-- ObservationID box -->
   <!-- <div id="IDArea"></div> -->
-  <div id="IDArea" style="position: relative; z-index: 200;"></div>
+  <!-- <div id="IDArea" style="position: relative; z-index: 200;"></div> -->
+  <div id="IDArea" style="position: absolute; z-index: 200; margin-left: 10%; cursor: grab;"></div>
 
   <!-- Spectral List Menu -->
   <script type="text/javascript" src='{% static "node_modules/dygraphs/dist/dygraph.js" %}'></script>
