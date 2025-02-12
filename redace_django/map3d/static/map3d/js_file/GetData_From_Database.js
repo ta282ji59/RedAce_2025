@@ -67,7 +67,7 @@ let csrftoken = getCookie('csrftoken');
 function fetchDataClickedCoordinates(lon, lat, checker) {
     let radiusCircle;
     const range = document.getElementById("rangeInput").value;
-    if(checker == 'search'){
+    if(checker == 'search' || checker == 'spectral_move'){
         radiusCircle = 0;
     }
     else if(range >= 0){
