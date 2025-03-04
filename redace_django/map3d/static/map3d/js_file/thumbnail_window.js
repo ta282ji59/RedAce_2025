@@ -194,8 +194,10 @@ function overlapFootprintLayer(obsCoord, num, name, materialColor) {
  * @returns 
  */
 function displayThumbnail(targetElement, dataObj) {
+    let imgWidth = dataObj['Mapping']['Image_size'][0];
+    let imgHeight = dataObj['Mapping']['Image_size'][1];
     let object = new Object();
-    object.extent = [0, 0, dataObj['Mapping']['Image_size'][0], dataObj['Mapping']['Image_size'][1]];
+    object.extent = [0, 0, imgWidth, imgHeight];
     object.projection = new ol.proj.Projection({
         code: 'EPSG:3857',//'EPSG:4326', // 'pixels',
         units: 'pixels',
@@ -226,18 +228,33 @@ function displayThumbnail(targetElement, dataObj) {
         controls: ol.control.defaults().extend([
             new ol.control.OverviewMap(),
             new ol.control.FullScreen(),
+            // new ol.control.MousePosition({
+            //     coordinateFormat: function (pxCoord) { // pxCoord: mouse position （pixel）
+            //         if (document.querySelector('.coords_type_switch1').classList.contains('active')) {
+            //             let pxY = dataObj['Mapping']['Image_size'][1] - Math.floor(pxCoord[1]);
+            //             let lon = dataObj['cube_coords']['lon'][pxY][Math.floor(pxCoord[0])];
+            //             let lat = dataObj['cube_coords']['lat'][pxY][Math.floor(pxCoord[0])];
+            //             return ol.coordinate.format([lon, lat], 'Lon: {x}, Lat: {y}', 5);
+            //         } else {
+            //             return ol.coordinate.format(pxCoord, 'Pixel [ x: {x}, y: {y} ]', 2);
+            //         }
+            //     },
+            //     projection: 'EPSG:3857',//'EPSG:4326',
+            //     undefinedHTML: 'Outside',
+            // }),
             new ol.control.MousePosition({
                 coordinateFormat: function (pxCoord) { // pxCoord: mouse position （pixel）
+                    let x = Math.floor(pxCoord[0]);
+                    let y = Math.floor(imgHeight - pxCoord[1]); // y座標を反転
                     if (document.querySelector('.coords_type_switch1').classList.contains('active')) {
-                        let pxY = dataObj['Mapping']['Image_size'][1] - Math.floor(pxCoord[1]);
-                        let lon = dataObj['cube_coords']['lon'][pxY][Math.floor(pxCoord[0])];
-                        let lat = dataObj['cube_coords']['lat'][pxY][Math.floor(pxCoord[0])];
+                        let lon = dataObj['cube_coords']['lon'][y][x];
+                        let lat = dataObj['cube_coords']['lat'][y][x];
                         return ol.coordinate.format([lon, lat], 'Lon: {x}, Lat: {y}', 5);
                     } else {
-                        return ol.coordinate.format(pxCoord, 'Pixel [ x: {x}, y: {y} ]', 2);
+                        return ol.coordinate.format([x, y], 'Pixel [ x: {x}, y: {y} ]', 2);
                     }
                 },
-                projection: 'EPSG:3857',//'EPSG:4326',
+                projection: 'EPSG:3857',
                 undefinedHTML: 'Outside',
             }),
         ]),
