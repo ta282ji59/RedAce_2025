@@ -154,9 +154,18 @@ def base_json_getRef(params_json):
         # field["coordinate"] = [lon, lat]
 
         # cubeファイルを開く
-        cube_data2 = gdal.Open(field["path"]["derived"]["cub"], gdal.GA_ReadOnly)
-        lon = cube_data2.GetRasterBand(5).ReadAsArray()[y1][x1]
-        lat = cube_data2.GetRasterBand(4).ReadAsArray()[y1][x1]
+        # cube_data2 = gdal.Open(field["path"]["derived"]["cub"], gdal.GA_ReadOnly)
+        # lon = cube_data2.GetRasterBand(5).ReadAsArray()[y1][x1]
+        # lat = cube_data2.GetRasterBand(4).ReadAsArray()[y1][x1]
+        width_max = cube_data.RasterXSize
+        height_max = cube_data.RasterYSize
+        lbl_data = pvl.load(field["path"]["main"]["lbl"])
+        MinimumLatitude = lbl_data["Caminfo"]["Polygon"]["Mapping"]["MinimumLatitude"]
+        MaximumLatitude = lbl_data["Caminfo"]["Polygon"]["Mapping"]["MaximumLatitude"]
+        MinimumLongitude = lbl_data["Caminfo"]["Polygon"]["Mapping"]["MinimumLongitude"]
+        MaximumLongitude = lbl_data["Caminfo"]["Polygon"]["Mapping"]["MaximumLongitude"]
+        lon = MinimumLongitude + (x1 / (width_max - 1)) * (MaximumLongitude - MinimumLongitude)
+        lat = MaximumLatitude - (y1 / (height_max - 1)) * (MaximumLatitude - MinimumLatitude)
         field["coordinate"] = [round(float(lon), 5), round(float(lat), 5)]
 
         json_data = json.dumps(field)
@@ -315,8 +324,17 @@ def base_json_getRef(params_json):
         cube_data2 = gdal.Open(field["path"]["derived"]["cub"], gdal.GA_ReadOnly)
         coord_array = []
         for i in range(len(px_array)):
-            lon = cube_data2.GetRasterBand(5).ReadAsArray()[int(px_array[i][1])][int(px_array[i][0])]
-            lat = cube_data2.GetRasterBand(4).ReadAsArray()[int(px_array[i][1])][int(px_array[i][0])]
+            width_max = cube_data.RasterXSize
+            height_max = cube_data.RasterYSize
+            lbl_data = pvl.load(field["path"]["main"]["lbl"])
+            MinimumLatitude = lbl_data["Caminfo"]["Polygon"]["Mapping"]["MinimumLatitude"]
+            MaximumLatitude = lbl_data["Caminfo"]["Polygon"]["Mapping"]["MaximumLatitude"]
+            MinimumLongitude = lbl_data["Caminfo"]["Polygon"]["Mapping"]["MinimumLongitude"]
+            MaximumLongitude = lbl_data["Caminfo"]["Polygon"]["Mapping"]["MaximumLongitude"]
+            lon = MinimumLongitude + (int(px_array[i][0]) / (width_max - 1)) * (MaximumLongitude - MinimumLongitude)
+            lat = MaximumLatitude - (int(px_array[i][1]) / (height_max - 1)) * (MaximumLatitude - MinimumLatitude)
+            # lon = cube_data2.GetRasterBand(5).ReadAsArray()[int(px_array[i][1])][int(px_array[i][0])]
+            # lat = cube_data2.GetRasterBand(4).ReadAsArray()[int(px_array[i][1])][int(px_array[i][0])]
             coord_array.append([round(float(lon), 5), round(float(lat), 5)])
 
         field["coordinate"] = coord_array
