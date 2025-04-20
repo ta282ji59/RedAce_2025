@@ -109,7 +109,8 @@ def base_json_getRef(params_json):
         field["type"] = params_json["type"]
 
         # cubeファイルを開く, データを読み込み専用で開く, 第一引数：cubeファイル名
-        cube_data = gdal.Open(field["path"]["main"]["cub"], gdal.GA_ReadOnly)
+        cube_link_change = field["path"]["main"]["cub"].replace("_trr3.cub", "_trr3_mapped.cub")
+        cube_data = gdal.Open(cube_link_change, gdal.GA_ReadOnly)
         # 属性の変数格納
         get_raster_band = cube_data.GetRasterBand
         # バンドのデータ無し値を取得
@@ -178,7 +179,8 @@ def base_json_getRef(params_json):
         field["path"] = params_json["path"]
 
         # cubeファイルを開く, データを読み込み専用で開く, 第一引数：cubeファイル名
-        cube_data = gdal.Open(field["path"]["main"]["cub"], gdal.GA_ReadOnly)
+        cube_link_change = field["path"]["main"]["cub"].replace("_trr3.cub", "_trr3_mapped.cub")
+        cube_data = gdal.Open(cube_link_change, gdal.GA_ReadOnly)
 
         # NDV = cube_data.GetRasterBand(1).GetNoDataValue() # バンドのデータ無し値を取得
 
@@ -271,7 +273,8 @@ def base_json_getRef(params_json):
         field["pixels"] = params_json["pixels"]
         field["type"] = params_json["type"]
         # cubeファイルを開く, データを読み込み専用で開く, 第一引数：cubeファイル名
-        cube_data = gdal.Open(field["path"]["main"]["cub"], gdal.GA_ReadOnly)
+        cube_link_change = field["path"]["main"]["cub"].replace("_trr3.cub", "_trr3_mapped.cub")
+        cube_data = gdal.Open(cube_link_change, gdal.GA_ReadOnly)
         # 属性の変数格納
         # get_raster_band = cube_data.GetRasterBand
         # バンドのデータ無し値を取得
