@@ -9,6 +9,39 @@ import collections as cl
 from osgeo import gdal, osr
 
 
+def pvl_to_jsonable(v):
+    """
+    pvl の値を JSON に載せられる型へ変換する
+    - Quantity(value=?, units=?) -> float（value） or dict にする
+    - list/tuple -> 再帰変換
+    - その他 -> そのまま or str
+    """
+    if v is None:
+        return None
+
+    # pvl Quantity 対応（value / units を持つ）
+    if hasattr(v, "value") and hasattr(v, "units"):
+        # まずは value（数値）だけ返すのが扱いやすい
+        try:
+            return float(v.value)
+        except Exception:
+            return str(v)
+
+    if isinstance(v, (list, tuple)):
+        return [pvl_to_jsonable(x) for x in v]
+
+    # numpy 型とかも落ちやすいので保険（int/float化できるならする）
+    try:
+        if isinstance(v, (int, float, str, bool)):
+            return v
+        # 例: numpy.float64 等
+        if hasattr(v, "item"):
+            return v.item()
+    except Exception:
+        pass
+
+    return str(v)
+
 
 ##############     THEMIS    ############################
 def GetExtent(gt,cols,rows):
@@ -39,6 +72,7 @@ def ReprojectCoords(coords, src_srs, tgt_srs):
 def base_json(params):
     params_json = params["properties"]
     geometry = params["geometry"]
+    name = str(params_json.get("name", "")).lower()
     field = cl.OrderedDict()
     field["path"] = params_json["path"]["data"]
     field["obs_ID"] = params_json["id"]
@@ -61,7 +95,7 @@ def base_json(params):
     # lbl_data=json.loads(lbl_data)
 
     ######## THEMIS ########
-    if params_json["name"] == 'themis':
+    if name == 'themis':
         field["obs_name"] = str(lbl_data["UNCOMPRESSED_FILE"]["INSTRUMENT_ID"])
 
         data["MISSION_NAME"] = str(lbl_data["UNCOMPRESSED_FILE"]["MISSION_NAME"])
@@ -87,26 +121,59 @@ def base_json(params):
 
 
     ######## CRISM #########
-    elif params_json["name"] == 'crism':
+    elif name == 'crism':
         field["obs_name"] = str(lbl_data["INSTRUMENT_ID"])
         data["PRODUCT_TYPE"] = str(lbl_data["PRODUCT_TYPE"])
         data["INSTRUMENT_HOST_NAME"] = str(lbl_data["INSTRUMENT_HOST_NAME"])
-        data["SPACECRAFT_ID "] = str(lbl_data["SPACECRAFT_ID"])
-        data["MRO:FRAME_RATE"] = " ".join(map(str, lbl_data["MRO:FRAME_RATE"]))
-        data["MRO:EXPOSURE_PARAMETER"] = str(lbl_data["MRO:EXPOSURE_PARAMETER"])
-        data["SOLAR_DISTANCE"] = " ".join(map(str, lbl_data["SOLAR_DISTANCE"]))
+        data["SPACECRAFT_ID"] = str(lbl_data["SPACECRAFT_ID"])
+        data["MRO:FRAME_RATE"] = pvl_to_jsonable(lbl_data.get("MRO:FRAME_RATE"))
+        data["MRO:EXPOSURE_PARAMETER"] = pvl_to_jsonable(lbl_data.get("MRO:EXPOSURE_PARAMETER"))
+        data["SOLAR_DISTANCE"] = pvl_to_jsonable(lbl_data.get("SOLAR_DISTANCE"))
 
-        filter_num = int(lbl_data['MRO:WAVELENGTH_FILTER']) + 1
-        cdr = np.genfromtxt(params_json["path"]["data"]["derived"]["wavelength"], delimiter = "," , dtype = float, usecols = (1))
-        filter_rf = np.genfromtxt(params_json["path"]["data"]["derived"]["filter"], delimiter = ",", dtype = np.uint16, usecols = (filter_num))
+        # --- WAVELENGTH_FILTER を安全に int 化 ---
+        wf = lbl_data.get("MRO:WAVELENGTH_FILTER", 0)
+        try:
+            wf = int(str(wf).strip())
+        except Exception:
+            wf = 0
+        
+        data["MRO:WAVELENGTH_FILTER"] = wf
+        filter_num = wf + 1  # 元の実装（+1）を維持
+        
+        # --- wavelength / filter を読む（まずは落ちないように） ---
+        cdr = np.genfromtxt(
+            params_json["path"]["data"]["derived"]["wavelength"],
+            delimiter=",",
+            dtype=float,
+            usecols=(1)
+        )
+        
+        # filter は列指定がズレると落ちるので try/except で保険
+        try:
+            filter_rf = np.genfromtxt(
+                params_json["path"]["data"]["derived"]["filter"],
+                delimiter=",",
+                dtype=np.uint16,
+                usecols=(filter_num)
+            )
+        except Exception:
+            # ダメなら 0列目にフォールバック（または空で返す）
+            filter_rf = np.genfromtxt(
+                params_json["path"]["data"]["derived"]["filter"],
+                delimiter=",",
+                dtype=np.uint16,
+                usecols=(0)
+            )
+        
+        # --- band_bin_center を作る（安全に） ---
         used_wav = []
         num_band = 1
         while num_band < filter_rf.shape[0]:
             if filter_rf[num_band] == 1:
                 used_wav.append(cdr[num_band] / 1000)
             num_band += 1
-
-        data["band_bin_center"] = ",".join(map(str, used_wav))
+        
+        data["band_bin_center"] = used_wav
         data2 = cl.OrderedDict()
         data2["Image_size"] = [cube_data.RasterXSize, cube_data.RasterYSize]
         field["Mapping"] = data2

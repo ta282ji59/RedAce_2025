@@ -9,8 +9,10 @@ services:
       - ./redace_nginx/conf:/etc/nginx/conf.d
       - ./redace_nginx/uwsgi_params:/etc/nginx/uwsgi_params
       - ./redace_django/collect_static:/collect_static
+      - /mars_dataset_tatsuya:/mars_dataset_tatsuya:ro
     depends_on:
       - django
+      - mapproxy
     networks:
       redace_network:
         ipv4_address: 172.16.238.6
@@ -46,6 +48,7 @@ services:
       - ./redace_django:/app
       - ./redace_jupyter/data:/data
       - /mars_dataset:/mars_data
+      - /mars_dataset_tatsuya:/mars_dataset_tatsuya
       - /mars_dataset_png:/mars_data_png
     expose:
       - "8001"
@@ -116,6 +119,23 @@ services:
       redace_network:
         ipv4_address: 172.16.238.4
 
+  # MapProxy 生成コンテナ
+  mapproxy:
+    build:
+      context: ./redace_mapproxy
+    container_name: redace_mapproxy
+    working_dir: /srv/mapproxy
+    
+    volumes:
+      - ./redace_mapproxy/mapproxy.yaml:/srv/mapproxy/mapproxy.yaml:ro
+    expose:
+      - "8080"
+    networks:
+      redace_network:
+        ipv4_address: 172.16.238.7
+        aliases:
+          - mapproxy
+    restart: unless-stopped
 
 
 networks:

@@ -414,6 +414,7 @@
                     <th scope="col" width="140" style="background-color: transparent;"></th>
                     <th scope="col" width="270" style="background-color: transparent;"></th>
                     <th scope="col" width="40" style="background-color: transparent;"></th>
+                    <th scope="col" width="40" style="background-color: transparent;"></th>
                     <th scope="col" width="40" id="export_all"><button type="submit" class="btn btn-warning" onclick="all_checked('export')">ALL</button></th>
                     <th scope="col" width="30" id="delete_all"><button type="submit" class="btn btn-warning" onclick="all_checked('delete')">ALL</button></th>
                   </tr>
@@ -424,6 +425,7 @@
                     <th scope="col" width="140">Create time</th>
                     <th scope="col" width="270">Note</th>
                     <th scope="col" width="40">Move</th>
+                    <th scope="col" width="40">Analysis</th>
                     <th scope="col" width="40"><button type="submit" id="export-btn" onclick="export_from_list();"><i class="fa fa-file-export" style="color: black;" onMouseOut="this.style.color='black';" onMouseOver="this.style.color='Red';"></i></button></th>
                     <th scope="col" width="30"><button type="submit" id="delete-btn" onclick="delete_from_list();"><i class="fa fa-trash-alt" style="color: black;" onMouseOut="this.style.color='black';" onMouseOver="this.style.color='Red';"></i></button></th>
                   </tr>
@@ -458,7 +460,9 @@
 <script src='{% static "map3d/cesium_1.47/cesium/Build/Cesium/Cesium.js" %}'></script>
 <script src='{% static "map3d/assets_ol4_4.3.1/ol4/js/ol.js" %}'></script>
 <!-- js file (django) -->
+<script src="{% static 'map3d/js_file/placenames.js' %}"></script>
 <script src='{% static "map3d/js_file/MapConf.js" %}'></script>
+<script src="{% static 'map3d/js_file/crism_footprints.js' %}"></script>
 <script src='{% static "map3d/js_file/Download.js" %}'></script>
 <script src='{% static "map3d/js_file/NetworkSetting.js" %}'></script>
 <script src='{% static "map3d/js_file/GetData_From_Database.js" %}'></script>

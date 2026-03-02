@@ -13,7 +13,7 @@ var downCheckList = [];
 var FootprintHist = new Array(2);
 var htmlSaveButton;
 var baseLayersList = ['MOLA_THEMIS_blend', 'MOLA_color', 'MDIM21_color', 'VIKING', 'THEMIS_night', 'THEMIS', 'MDIM21'];
-var overlayLayersList = ['CRISM', 'THEMIS', 'Mars500K_Quads', 'Mars2M_Quads', 'Mars5M_Quads', 'NOMENCLATURE'];
+var overlayLayersList = ['crism', 'themis', 'CRISM', 'THEMIS', 'Mars500K_Quads', 'Mars2M_Quads', 'Mars5M_Quads', 'NOMENCLATURE'];
 var thumbnail_root = '/mnt';
 
 Object.defineProperty(Object.prototype, 'forIn', {
@@ -118,19 +118,16 @@ function fetchDataClickedCoordinates(lon, lat, checker) {
     let wLayer1, wLayer2, whereBaseLayer;
 
     for (let i = 0; i < layer_check.layers.length; i++) {
-        if (layer_check.layers[i]._show === true) {
-            wLayer1 = layer_check.layers[i]._isBaseLayer;
-            wLayer2 = layer_check.layers[i]._imageryProvider._layers;
-            if (baseLayersList.indexOf(wLayer2) >= 0) {
-                whereBaseLayer = i;
-            } else {
-                if (overlayLayersList.indexOf(wLayer2) < 0 && wLayer2 != void 0 && wLayer2 != 'test') {
-                    if (whereBaseLayer == void 0) layerList.push(wLayer2);
-                }
-            }
-            // if (wLayer1 == true) currentBaseLayer = wLayer2;
-        }
+        const layerObj = layer_check.layers[i];
+        if (layerObj._show !== true) continue;
+        if (layerObj._isBaseLayer) continue;
+        
+        const uiName = layerObj.name;
+        if (uiName === "CRISM") layerList.push("CRISM");
+        if (uiName === "THEMIS") layerList.push("THEMIS");
     }
+    
+    console.log("layerList decided:", layerList);
 
     if (layerList.length <= 0) return 0;
 
@@ -181,6 +178,10 @@ function displayObsIdBox(data) {
     console.log(data);
     console.log('===========');
     let dataObject = JSON.parse(data);
+
+    // displayObsIdBox の中、クリック直前でもOK いったん追加
+    console.log(dataObject['hit_data'][0][0]['features'][0]['properties']);
+
 
     if (dataObject['hit_data'][0][0]['features'].length > 0) {
         let i;
@@ -373,6 +374,10 @@ function getSpectralDataClickedPixel(px, imgSize, obsID, path, imgPath, obsName,
             },
         }).then(
             function (data) {
+                console.log("[then] reflectance resolved");
+                console.log("[then] typeof data =", typeof data);
+                console.log("[then] displaySpectralBox =", typeof displaySpectralBox);
+
                 $loading.addClass('is-hide');
                 $loading2.addClass('is-hide');
                 console.log('SUCCESS >> getSpectralDataClickedPixel');
@@ -421,6 +426,7 @@ function getSpectralDataRoiArea(pxArray, imgSize, obsID, path, imgPath, obsName,
         headers: { 'X-CSRFToken': csrftoken },
         url: 'reflectance/',
         contentType: 'application/json',
+        dataType: 'text',
         data: JSON.stringify({
             operation: 'get',
             pixels: newPxArr,

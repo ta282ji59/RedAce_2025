@@ -1,0 +1,79 @@
+services:
+  wmts:
+    md:
+      title: RedAce WMTS via MapProxy
+    restful: true
+    kvp: true
+
+layers:
+  - name: crism
+    title: CRISM Footprints (WMTS)
+    sources: [crism_cache]
+  - name: themis
+    title: THEMIS Footprints (WMTS)
+    sources: [themis_cache]
+  - name: mola_base
+    title: MOLA + THEMIS Color Shaded Relief
+    sources: [mola_cache]
+
+
+caches:
+  crism_cache:
+    grids: [mars_cesium]
+    sources: [crism_wms]
+    image:
+      transparent: true
+      format: image/png
+  themis_cache:
+    grids: [mars_cesium]
+    sources: [themis_wms]
+    image:
+      transparent: true
+      format: image/png
+  mola_cache:
+    grids: [mars_cesium]
+    sources: [mola_wms]
+    image:
+      transparent: false
+      format: image/jpeg
+    cache:
+      type: file
+      directory: ./cache/mola
+
+sources:
+  crism_wms:
+    type: wms
+    req:
+      url: http://redace_nginx/redace_map/crism
+      layers: crism
+      format: image/png
+    wms_opts:
+      version: 1.1.1
+  themis_wms:
+    type: wms
+    req:
+      url: http://redace_nginx/redace_map/themis
+      layers: themis
+      format: image/png
+    wms_opts:
+      version: 1.1.1
+  mola_wms:
+    type: wms
+    req:
+      url: http://planetarymaps.usgs.gov/cgi-bin/mapserv?map=/maps/mars/mars_simp_cyl.map
+      layers: MOLA_THEMIS_blend
+      format: image/jpeg
+    wms_opts:
+      version: 1.1.1
+
+grids:
+  mars_cesium:
+    base: GLOBAL_GEODETIC
+    origin: nw
+    tile_size: [256, 256]
+
+globals:
+  cache:
+    base_dir: ./cache
+  image:
+    resampling_method: bilinear

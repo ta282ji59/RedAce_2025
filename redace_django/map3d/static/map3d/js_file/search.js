@@ -75,6 +75,10 @@ function featureChanged(feature, id) {
 }
 
 
+// 正規化
+function normalizeLon(lon) {
+    return lon > 180 ? lon - 360 : lon;
+}
 
 // 1ページあたりの表示数
 const page_limit = 45;
@@ -404,10 +408,12 @@ function addListItem(resultText, checker) {
         }
 
         // ページインジケータを非表示または初期化
-        if (pageIndicator) {
+        if (typeof pageIndicator !== "undefined" && pageIndicator) {
             pageIndicator.textContent = '';
         }
-        updatePaginationButtons();
+        if (typeof updatePaginationButtons === "function") {
+            updatePaginationButtons();
+        }
     }
 }
 
@@ -435,7 +441,7 @@ function displayAllPins(data, check) {
                 type: "Feature",
                 geometry: {
                     type: "Point",
-                    coordinates: [item.lon, item.sub_lat],
+                    coordinates: [normalizeLon(item.lon), item.sub_lat],
                 },
                 properties: {
                     name: item.name,
@@ -463,7 +469,7 @@ function displayAllPins(data, check) {
 // クリック時にピンの色を変更する処理
 function move_from_list_search(item) {
     const latitude = item.lat;
-    const longitude = item.lon;
+    const longitude = normalizeLon(item.lon);
 
     fetchDataClickedCoordinates(longitude, latitude, 'search');
 

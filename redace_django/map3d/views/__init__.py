@@ -6,3 +6,6 @@ from .spectrum_save import spectrum_data_save
 from .api_reftable import table, delete, export, get_graph_data
 # from .api_search import search
 from .api_search import search,feature_search
+from .api_analysis import run_analysis
+from .api_placenames import api_placenames
+from .api_crism_footprints import api_crism_footprints

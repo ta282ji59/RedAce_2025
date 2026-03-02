@@ -13,9 +13,11 @@ var graphCounter = 1;
  * @param {*} data 
  */
 function displaySpectralBox(data) {
-    let dataObj = JSON.parse(data);
-    console.log("==========");
-    console.log(dataObj);
+    console.log("[displaySpectralBox] called", typeof data);
+    console.log("[displaySpectralBox] raw:", data);
+  
+    let dataObj = (typeof data === "string") ? JSON.parse(data) : data;
+    console.log("[displaySpectralBox] parsed:", dataObj);
 
     let funcArea, graphArea;
     /**
@@ -171,20 +173,23 @@ function displaySpectralBox(data) {
 
         if (isTypeDIRECT) {
             let refList = dataObj['reflectance'];
+            const n = Math.min(wavList.length, refList.length);
 
-            for (let i = 0; i < dataObj['band_number']; i++) {
+            for (let i = 0; i < n; i++) {
                 newGraphArr[i] = [];
                 newGraphArr[i][0] = wavList[i];
                 newGraphArr[i][1] = refList[i] !== -1 ? refList[i] : NaN;
             }
         } else if (isTypeROI) {
             let refArr = dataObj['reflectance'];
+            const n = wavList.length;
 
-            for (let i = 0; i < dataObj['band_number']; i++) {
+            for (let i = 0; i < n; i++) {
                 newGraphArr[i] = [];
                 newGraphArr[i][0] = wavList[i];
                 for (let j = 0; j < refArr.length; j++) {
-                    newGraphArr[i][j + 1] = refArr[j][i] !== -1 ? refArr[j][i] : NaN;
+                    const v = refArr[j]?.[i];
+                    newGraphArr[i][j + 1] = (v !== -1 && v != null) ? v : NaN;
                 }
             }
         }
@@ -357,18 +362,24 @@ function displaySpectralBox(data) {
             }
         );
 
+        requestAnimationFrame(() => {
+            if (chartList[graphCounter - 1]) {
+                chartList[graphCounter - 1].resize();
+            }
+        });
+
         console.log("==============");
         console.log(chartList);
 
         // dygraph生成時divが非表示だと生成されないため、タブ切り替え時にリサイズで生成する。
         document.querySelector('#graph_1').addEventListener('click', () => {
-            chartList[0].resize();
+            if (chartList[0] && typeof chartList[0].resize === "function") chartList[0].resize();
         });
         document.querySelector('#graph_2').addEventListener('click', () => {
-            chartList[1].resize();
+            if (chartList[1] && typeof chartList[1].resize === "function") chartList[1].resize();
         });
         document.querySelector('#graph_3').addEventListener('click', () => {
-            chartList[2].resize();
+            if (chartList[2] && typeof chartList[2].resize === "function") chartList[2].resize();
         });
 
         graphCounter++;

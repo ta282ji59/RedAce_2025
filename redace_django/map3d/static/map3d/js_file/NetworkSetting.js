@@ -4,7 +4,7 @@
  */
 
 // CRISM、THEMISを起動する際のサーバーリンク
-var Network_mapserver='/redace_map/?map=/maps';
+var Network_mapserver='/redace_map';
 
 // 火星レイヤーを出力するためのサーバーリンク
 var Network_terrainserver='/redace_terrain/tilesets/mars';
