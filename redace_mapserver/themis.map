@@ -2,6 +2,14 @@
   WEB
     METADATA
       "wms_enable_request" "*"
+      "wms_title"            "THEMIS Footprints"
+      "wms_onlineresource"   "/redace_map/themis?"
+      "wms_srs"              "EPSG:4326"
+
+      "ows_enable_request"   "*"
+      "ows_title"            "THEMIS Footprints"
+      "ows_onlineresource"   "/redace_map/themis?"
+      "ows_srs"              "EPSG:4326"
     End
   END
 
@@ -20,10 +28,25 @@
     "init=epsg:4326"
   END
 
+  EXTENT -180 -90 180 90
+  UNITS DD
+
   LAYER
     NAME "themis"
     SIZEUNITS pixels
     STATUS on 
+
+    METADATA
+      "wms_title"  "THEMIS Footprints"
+      "wms_srs"    "EPSG:4326"
+      "wms_extent" "-180 -90 180 90"
+    END
+
+    METADATA
+      "ows_title"  "THEMIS Footprints"
+      "ows_srs"    "EPSG:4326"
+      "ows_extent" "-180 -90 180 90"
+    END
 
     CONNECTIONTYPE postgis
     CONNECTION "user=ta282ji password=triathlon dbname=mars host=172.16.238.5"

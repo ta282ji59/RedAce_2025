@@ -1,0 +1,14 @@
+seeds:
+  # 低〜中ズームの全球をまとめて作るジョブ
+  mola_global_lowzoom:
+    caches: [mola_cache]       # mapproxy.yaml の cache 名と揃える
+    grids:  [mars_cesium]      # 同じく grid 名
+    coverages: [mars_global]
+    levels:
+      from: 0                  # ズームレベル 0 〜 6 を事前生成
+      to:   6
+
+coverages:
+  mars_global:
+    bbox: [-180.0, -90.0, 180.0, 90.0]  # 全球
+    srs: 'EPSG:4326'

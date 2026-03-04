@@ -2,6 +2,14 @@
   WEB
     METADATA
       "wms_enable_request" "*"
+      "wms_title"            "CRISM Footprints"
+      "wms_onlineresource"   "/redace_map/crism?"
+      "wms_srs"              "EPSG:4326"
+
+      "ows_enable_request"   "*"
+      "ows_title"            "CRISM Footprints"
+      "ows_onlineresource"   "/redace_map/crism?"
+      "ows_srs"              "EPSG:4326"
     End
   END
 
@@ -20,11 +28,26 @@
     "init=epsg:4326"
   END
 
+  EXTENT -180 -90 180 90
+  UNITS DD
+  
   LAYER
     NAME "crism"
     SIZEUNITS pixels
     STATUS on 
 
+    METADATA
+      "wms_title"  "CRISM Footprints"
+      "wms_srs"    "EPSG:4326"
+      "wms_extent" "-180 -90 180 90"
+    END
+
+    METADATA
+      "ows_title"  "CRISM Footprints"
+      "ows_srs"    "EPSG:4326"
+      "ows_extent" "-180 -90 180 90"
+    END
+    
     CONNECTIONTYPE postgis
     CONNECTION "user=ta282ji password=triathlon dbname=mars host=172.16.238.5"
 

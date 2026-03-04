@@ -36,9 +36,17 @@ def base_json_getRef(params_json):
         no_data_ref = 1
 
         # 波長の順番が昇順と降順の時がある >> 昇順にする
-        wav_list = params_json["wavelength"].split(',')
-        wav_list = [round(float(s), 5) for s in wav_list]
-        if wav_list[0] > wav_list[1]:
+        wav = params_json.get("wavelength", [])
+
+        # wavelength が "0.1,0.2,..." の文字列でも [0.1,0.2,...] の配列でも両対応
+        if isinstance(wav, str):
+            wav_list = [round(float(s), 5) for s in wav.split(',') if s != ""]
+        elif isinstance(wav, (list, tuple)):
+            wav_list = [round(float(x), 5) for x in wav]
+        else:
+            wav_list = []
+
+        if len(wav_list) >= 2 and wav_list[0] > wav_list[1]:
             wav_list.reverse()
             is_reverse = True
         else:
@@ -117,9 +125,17 @@ def base_json_getRef(params_json):
         NDV = get_raster_band(1).GetNoDataValue()
 
         # 波長の順番が昇順と降順の時がある >> 昇順にする
-        wav_list = params_json["wavelength"].split(',')
-        wav_list = [round(float(s), 5) for s in wav_list]
-        if wav_list[0] > wav_list[1]:
+        wav = params_json.get("wavelength", [])
+
+        # wavelength が "0.1,0.2,..." の文字列でも [0.1,0.2,...] の配列でも両対応
+        if isinstance(wav, str):
+            wav_list = [round(float(s), 5) for s in wav.split(',') if s != ""]
+        elif isinstance(wav, (list, tuple)):
+            wav_list = [round(float(x), 5) for x in wav]
+        else:
+            wav_list = []
+
+        if len(wav_list) >= 2 and wav_list[0] > wav_list[1]:
             wav_list.reverse()
             is_reverse = True
         else:
@@ -128,7 +144,8 @@ def base_json_getRef(params_json):
         y1, x1 = int(params_json["pixels"][1]), int(params_json["pixels"][0])
 
         # 反射率が取得可能かどうか
-        if get_raster_band(30).ReadAsArray()[y1][x1] == NDV:
+        if (get_raster_band(10).ReadAsArray()[y1][x1] == NDV and
+            get_raster_band(100).ReadAsArray()[y1][x1] == NDV):
             ref_str = -1
         else:
             ref_list = []
@@ -136,14 +153,24 @@ def base_json_getRef(params_json):
             bandnumber_range.pop(0)
             # 反射率をリストに格納
             for bandnumber_i in bandnumber_range:
-                ref = get_raster_band(bandnumber_i + 1).ReadAsArray()[y1][x1] # 多分 [1]Y,[0]X
-                if ref != NDV:
-                    ref_list.append(round(float(ref), 5))
+                v = get_raster_band(bandnumber_i + 1).ReadAsArray()[y1][x1]
+                if v != NDV and np.isfinite(v):
+                    ref_list.append(float(v))
                 else:
-                    ref_list.append(-1)
+                    ref_list.append(np.nan)
             
             if is_reverse == True:
                 ref_list.reverse()
+
+            # ===== NDV(-1) を除去して wav と ref の長さを揃える（重要） =====
+            n = min(len(wav_list), len(ref_list))
+            wav_arr = np.array(wav_list[:n], dtype=float)
+            ref_arr = np.array(ref_list[:n], dtype=float)
+
+            # ===== 有効値だけ残す（nan除去）=====
+            mask = np.isfinite(wav_arr) & np.isfinite(ref_arr)
+            wav_list = wav_arr[mask].round(5).tolist()
+            ref_list = ref_arr[mask].round(5).tolist()
 
         field["band_number"] = cube_data.RasterCount - 1 # ex) 1,2,...,437
         field["band_bin_center"] = wav_list      # 波長
@@ -284,14 +311,21 @@ def base_json_getRef(params_json):
         band_num = cube_data.RasterCount
 
         # 波長の順番が昇順と降順の時がある >> 昇順にする
-        wav_list = params_json["wavelength"].split(',')
-        wav_list = [round(float(s), 5) for s in wav_list]
-        if wav_list[0] > wav_list[1]:
+        wav = params_json.get("wavelength", [])
+
+        # wavelength が "0.1,0.2,..." の文字列でも [0.1,0.2,...] の配列でも両対応
+        if isinstance(wav, str):
+            wav_list = [round(float(s), 5) for s in wav.split(',') if s != ""]
+        elif isinstance(wav, (list, tuple)):
+            wav_list = [round(float(x), 5) for x in wav]
+        else:
+            wav_list = []
+
+        if len(wav_list) >= 2 and wav_list[0] > wav_list[1]:
             wav_list.reverse()
             is_reverse = True
         else:
-            is_reverse = False
-
+            is_reverse = False        
         # 反射率をリストに格納
         px_array = params_json["pixels"]
         ref_array = []
@@ -302,7 +336,7 @@ def base_json_getRef(params_json):
                 if ref != NDV:
                     ref_list.append(round(float(ref), 5))
                 else:
-                    ref_list.append(-1)
+                    ref_list.append(None)
             
             # 昇順にする
             if is_reverse == True:
@@ -310,7 +344,7 @@ def base_json_getRef(params_json):
 
             ref_array.append(ref_list) # list結合（二次元配列）
 
-        field["band_number"] = band_num - 1 # ex) 1,2,...,437
+        field["band_number"] = len(wav_list) # ex) 1,2,...,437
         field["band_bin_center"] = wav_list     # 波長
         field["reflectance"] = ref_array        # 反射率
         field["Image_size"] = [cube_data.RasterXSize, cube_data.RasterYSize]

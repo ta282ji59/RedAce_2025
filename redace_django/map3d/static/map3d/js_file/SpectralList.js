@@ -1,3 +1,10 @@
+const analysisCacheById = {};
+let currentAnalysisRowId = null;
+
+function apiUrl(path) {
+  return `/map3d/${path.replace(/^\/?/, '')}`;
+}
+
 // このコードを読み込んだら自動実行する関数
 document.addEventListener("DOMContentLoaded", () => {
     get_record_spectra();
@@ -45,6 +52,7 @@ function user_info() {
 
 // テーブル情報取得
 let data_copy;
+const spectrumCacheByRowId = {};
 function table_info() {
     let data = [];
 
@@ -101,7 +109,12 @@ function table_info() {
                   <th scope="col" width="270">${edit_des}</th>
                   <th scope="col" width="40" style="text-align: center; vertical-align: middle;">
                     <button type="submit" id="move-btn" onclick="move_from_list('${row.instrument}', '${row.instrument}', '${row.data_id}', ${row.latitude[0]}, ${row.longitude[0]});">
-                        <i class="fas fa-location-arrow" style="color: black;" onMouseOut="this.style.color='black';" onMouseOver="this.style.color='Red';"></i></button></th>
+                        <i class="fas fa-location-arrow" style="color: black;" onMouseOut="this.style.color='black';" onMouseOver="this.style.color='Red';"></i>
+                    </button>
+                  </th>
+                  <th scope="col" width="80" style="text-align:center;vertical-align:middle;">
+                    <button type="button" class="btn btn-light btn-sm" onclick="openAnalysis('${row.id}','${row.instrument}','${row.data_id}')">
+                        <i class="fas fa-external-link-alt"></i>
                     </button>
                   </th>
                   <th scope="col" width="40" style="text-align: center; vertical-align: middle;">
@@ -116,7 +129,7 @@ function table_info() {
                 const graphRow = document.createElement("tr");
                 graphRow.style.display = "none";
                 graphRow.innerHTML = `
-                  <td colspan="8" style="padding: 0;">
+                  <td colspan="9" style="padding: 0;">
                       <div style="display: flex; width: 100%; height: 300px;">
                         <!-- グラフコンテナ -->
                         <div style="display: flex; width: 100%; height: 300px;">
@@ -142,7 +155,7 @@ function table_info() {
                 // クリック時のイベント
                 tr.addEventListener("click", (event) => {
                     // button,checkboxをクリックしても反応しないようにする
-                    if (event.target.tagName === "BUTTON" || event.target.tagName === "INPUT") {
+                    if (event.target.tagName === "BUTTON" || event.target.tagName === "INPUT"  || event.target.tagName === "I") {
                         return;
                     }
                     if (graphRow.style.display === "none") {
@@ -192,10 +205,7 @@ function createGraph(rowId, containerId) {
                 let wavelength = firstItem.wavelength;
                 let reflectance = firstItem.reflectance;
 
-                data_copy[rowId] = {
-                    wavelength: wavelength,
-                    reflectance: reflectance
-                };
+                spectrumCacheByRowId[rowId] = { wavelength, reflectance };
 
 
                 // Dygraph用のグラフデータとラベルの生成
@@ -422,7 +432,7 @@ function countCheckboxes(columnIndex) {
 
 let currentGeoJson = null; // 現在の GeoJSON データを追跡
 
-function move_from_list(instrument, instrument, obs_id, latitude, longitude) {
+function move_from_list(layerName, instrument, obs_id, latitude, longitude) {
     // CRISM か THEMIS のチェックをオンにする
     layer_check.layers.forEach(function (layer) {
         if (layer.name === instrument) {
@@ -686,3 +696,740 @@ function delete_from_list() {
     }
 }
 
+// ★ Replace the whole function with this
+window.openAnalysis = function (rowId, instrument, dataId) {
+  const t = document.getElementById('spectral_list_toggle');
+  if (t) t.checked = false;
+
+  const old1 = document.getElementById('analysis_drawer');
+  const old2 = document.getElementById('analysis_overlay');
+  if (old1) old1.remove();
+  if (old2) old2.remove();
+
+  const DRAWER_WIDTH = 1060;
+  const cssId = 'analysis_drawer_style_ctrl_v8_graph';
+  if (!document.getElementById(cssId)) {
+    const st = document.createElement('style');
+    st.id = cssId;
+    st.textContent = `
+#analysis_overlay{position:fixed;inset:0;background:transparent;z-index:99997;display:none}
+#analysis_drawer{position:fixed;top:0;right:-${DRAWER_WIDTH}px;width:${DRAWER_WIDTH}px;max-width:96vw;height:100%;
+  background:#000;color:#111;z-index:99998;display:flex;flex-direction:column;transition:right .28s ease}
+#analysis_drawer.show{right:0}
+#analysis_hdr{display:flex;align-items:center;gap:.5rem;padding:.7rem .9rem;border-bottom:2px solid #fff;background:#000;color:#fff}
+#analysis_hdr h5{margin:0;font-size:20px;font-weight:700;letter-spacing:.2px}
+#analysis_close{margin-left:auto;width:26px;height:26px;border:none;border-radius:4px;background:#c83b3b;color:#fff;font-size:16px;line-height:1;cursor:pointer}
+#analysis_ctrl{display:flex;gap:1rem;align-items:flex-start;padding:.9rem .9rem .5rem;background:#000;justify-content:flex-start;}
+.ctrl-col{display:flex;flex-direction:column;gap:.8rem}
+.ctrl-row{display:grid;grid-template-columns:140px 1fr;align-items:center;gap:.6rem;min-width:320px}
+.ctrl-label{color:#fff;font-weight:700;font-size:16px;white-space:nowrap;justify-self:end}
+.white-select,.white-input{appearance:none;-webkit-appearance:none;-moz-appearance:none;
+  background:#fff;color:#111;border:2px solid #000;border-radius:8px;padding:.4rem .65rem;
+  width:220px;max-width:220px;box-shadow:0 2px 0 rgba(0,0,0,.35)}
+.idx-wrap{display:flex;gap:.5rem;align-items:center}
+.idx-wrap input{width:105px}
+.idx-dash{color:#fff;font-weight:700}
+.btn-dummy{padding:.45rem .8rem;border:2px solid #000;background:#fff;color:#111;border-radius:8px;font-weight:600}
+.btn-dummy:hover{filter:brightness(.95)}
+#analysis_body{background:#000;padding:.6rem .9rem 1rem;overflow:auto;height:100%}
+.table-wrap{background:#fff;border-radius:0;border:2px solid #000;overflow:hidden}
+#analysis_tbl{width:100%;border-collapse:collapse;background:#fff}
+#analysis_tbl th,#analysis_tbl td{border:2px solid #000;padding:.55rem .7rem;font-size:15px;color:#000;vertical-align:middle}
+#analysis_tbl thead th{background:#fff;color:#000;font-weight:800;font-size:18px;text-align:center}
+#analysis_tbl tbody td:nth-child(1){font-family:ui-monospace,Menlo,Consolas,monospace;letter-spacing:.08em}
+@media (max-width:900px){.white-select,.white-input{width:220px;max-width:220px}.ctrl-row{min-width:360px;grid-template-columns:120px 1fr}}
+#runStatus{margin-left:1rem;color:#fff;font-weight:600}
+#errMsg{color:#ffaaaa;font-weight:700;margin-left:140px;margin-top:4px;display:none}
+.graph-wrap{margin-top:12px;background:#fff;border:2px solid #000;border-top:none}
+#spectrum_graph{width:100%;height:420px}
+.hint-bar{color:#fff;font-size:12px;opacity:.8;margin-top:4px}
+.clickable-row{cursor:pointer}
+    `;
+    document.head.appendChild(st);
+  }
+
+  const html = `
+    <div id="analysis_overlay"></div>
+    <aside id="analysis_drawer" aria-live="polite">
+      <div id="analysis_hdr">
+        <h5>Analysis</h5>
+        <button id="analysis_close" aria-label="Close">✕</button>
+      </div>
+      <div id="analysis_ctrl">
+        <div class="ctrl-col" id="leftCol">
+          <div class="ctrl-row">
+            <span class="ctrl-label">interp_type</span>
+            <select id="sel_interp" class="white-select">
+              <option value="liner" selected>liner</option>
+              <option value="spi">sp</option>
+            </select>
+          </div>
+          <div class="ctrl-row">
+            <span class="ctrl-label">scaling_type</span>
+            <select id="sel_scaling" class="white-select">
+              <option value="norm" selected>Normalization</option>
+              <option value="st">Standardization</option>
+            </select>
+          </div>
+          <div class="ctrl-row">
+            <span class="ctrl-label">similarity_method</span>
+            <select id="sel_sim_type" class="white-select">
+              <option value="pcc">Pearson’s r</option>
+              <option value="cos" selected>Cos</option>
+              <option value="edis">ED</option>
+            </select>
+          </div>
+        </div>
+        <div class="ctrl-col" id="rightCol">
+          <div class="ctrl-row">
+            <span class="ctrl-label">sort</span>
+            <select id="sel_sort" class="white-select">
+              <option value="sim_type">similarity_method</option>
+              <option value="band">Band Number</option>
+            </select>
+          </div>
+          <div class="ctrl-row">
+            <span class="ctrl-label">ascending</span>
+            <select id="sel_ascending" class="white-select">
+              <option value="true" selected>True</option>
+              <option value="false">False</option>
+            </select>
+          </div>
+          <div class="ctrl-row">
+            <span class="ctrl-label">wavelength range</span>
+            <div class="idx-wrap">
+              <input id="idx_min" class="white-input" type="number" step="0.001" placeholder="min wavelength (μm)">
+              <span class="idx-dash">–</span>
+              <input id="idx_max" class="white-input" type="number" step="0.001" placeholder="max wavelength (μm)">
+            </div>
+          </div>
+          <div id="errMsg">Invalid index range</div>
+        </div>
+        <div id="analysis_actions" style="display:flex;flex-direction:column;align-items:flex-start;gap:10px;">
+          <button id="runAnalysisBtn" class="btn-dummy" style="width:100px;">Run</button>
+          <input id="downloadRowsInput"
+                 class="white-input"
+                 type="number"
+                 inputmode="numeric"
+                 min="1"
+                 step="1"
+                 placeholder="download # of rows"
+                 style="width:180px;">
+          <button id="downloadCsvBtn" class="btn-dummy" style="width:140px;">Download</button>
+          <span id="runStatus"></span>
+        </div>
+      </div>
+
+      <div id="analysis_body">
+        <div class="table-wrap" id="tableWrap" style="display:none;">
+          <table id="analysis_tbl">
+            <thead>
+              <tr id="theadRow">
+                <th>SpectrumID</th>
+                <th>SampleID</th>
+                <th id="thMetric">similarity_method</th>
+                <th id="thSort">Band Number</th>
+                <th>SubType</th>
+              </tr>
+            </thead>
+            <tbody id="analysisTbody"></tbody>
+          </table>
+        </div>
+        <div id="spectrum_box_raw" class="graph-wrap" style="display:none;">
+          <div id="spectrum_graph_raw"></div>
+        </div>
+        <div id="spectrum_box" class="graph-wrap" style="display:none;">
+          <div id="spectrum_graph"></div>
+        </div>
+        <div class="hint-bar">Click a row to overlay library spectrum. Double-click legend to isolate.</div>
+      </div>
+    </aside>
+  `;
+  document.body.insertAdjacentHTML('beforeend', html);
+
+  const overlay = document.getElementById('analysis_overlay');
+  const drawer  = document.getElementById('analysis_drawer');
+  requestAnimationFrame(() => {
+    overlay.style.display = 'block';
+    drawer.classList.add('show');
+  });
+
+  /* ====== Plotly & overlay utilities ====== */
+  const AUTO_OVERLAY_TOP_N = 10;   // ← 上位何本重ねるか
+  const PARALLEL_CHUNK     = 5;    // ← 同時 fetch 本数
+  let targetWav = [];
+  let targetRef = [];
+  const overlayTraces = new Map(); // SpectrumID -> trace
+  const localSpectrumCache = {};    // rowId -> { wav, ref }
+  let targetRawX = [];
+  let targetRawY = [];
+  const rawTraces = new Map();
+
+  // 先頭・末尾の 0 / -1 / 非数を null にする
+  function dropEdgeZeros(arr) {
+    if (!Array.isArray(arr)) return arr;
+    const a = arr.slice();
+    let i = 0, j = a.length - 1;
+    while (i <= j && (!isFinite(a[i]) || a[i] === 0 || a[i] === -1)) { a[i] = null; i++; }
+    while (j >= i && (!isFinite(a[j]) || a[j] === 0 || a[j] === -1)) { a[j] = null; j--; }
+    return a;
+  }
+  
+  function ensurePlotlyLoaded() {
+    if (window.Plotly) return Promise.resolve();
+    return new Promise((resolve, reject) => {
+      const id = 'plotly-autoload';
+      if (document.getElementById(id)) {
+        const iv = setInterval(() => {
+          if (window.Plotly) { clearInterval(iv); resolve(); }
+        }, 80);
+        return;
+      }
+      const s = document.createElement('script');
+      s.id = id;
+      s.src = 'https://cdn.plot.ly/plotly-2.35.2.min.js';
+      s.onload = () => resolve();
+      s.onerror = () => reject(new Error('Plotly load failed'));
+      document.head.appendChild(s);
+    });
+  }
+
+  // 端の 0 / -1 / きわめて小さい値を null にして縦の壁を消す
+  function scrubEdgeGlitches(arr, eps = 0.03) {
+    if (!Array.isArray(arr)) return arr;
+    const a = arr.slice();
+    let i = 0, j = a.length - 1;
+  
+    const bad = v => v == null || !isFinite(v) || v === -1 || v === 0 || Math.abs(v) <= eps;
+  
+    // 先頭側を削る
+    while (i <= j && bad(+a[i])) { a[i] = null; i++; }
+    // 末尾側を削る
+    while (j >= i && bad(+a[j])) { a[j] = null; j--; }
+  
+    // 先頭近くに 1 点だけ 0 が混じるタイプのノイズも潰す（孤立 0 → null）
+    for (let k = 1; k < a.length - 1; k++) {
+      if (bad(+a[k]) && !bad(+a[k-1]) && !bad(+a[k+1])) a[k] = null;
+    }
+    return a;
+  }
+
+  function renderRaw() {
+    const base = [{
+      x: targetRawX, y: targetRawY, mode: 'lines',
+      name: 'Target (raw)', line: { width: 2 }, connectgaps: true
+    }];
+    const traces = base.concat(Array.from(rawTraces.values()).map(t => ({ ...t, connectgaps: true })));
+    const layout = {
+      title: 'Raw Spectra Data',
+      xaxis: { title: { text: 'Wavelength' }, tickmode: 'auto', nticks: 10, tickangle: -20, automargin: true, zeroline: false, autorange: true },
+      yaxis: { title: { text: 'Reflectance' }, automargin: true, zeroline: false, autorange: true },
+      legend: { orientation: 'h', y: -0.25 },
+      margin: { l: 60, r: 10, t: 40, b: 80 },
+      hovermode: 'x unified',
+      showlegend: false
+    };
+    document.getElementById('spectrum_box_raw').style.display = 'block';
+    Plotly.newPlot('spectrum_graph_raw', traces, layout, { responsive: true });
+  }
+
+  function renderScaled() {
+    const base = [{ x: targetWav, y: targetRef, mode: 'lines', name: 'Target', line: { width: 2 }, connectgaps: true }];
+    const traces = base.concat(
+      Array.from(overlayTraces.values()).map(t => ({ ...t, connectgaps: true }))
+    );
+    const layout = {
+      title: 'Scaled Spectra Data',
+      xaxis: { title: { text: 'Wavelength' }, tickmode: 'auto', nticks: 10, tickangle: -20, automargin: true, zeroline: false, autorange: true },
+      yaxis: { title: { text: 'Reflectance (scaled)' }, automargin: true, zeroline: false, autorange: true },
+      legend: { orientation: 'h', y: -0.25 },
+      margin: { l: 60, r: 10, t: 40, b: 80 },
+      hovermode: 'x unified'
+    };
+    document.getElementById('spectrum_box').style.display = 'block';
+    Plotly.newPlot('spectrum_graph', traces, layout, { responsive: true });
+  }
+
+  function padToTargetGrid(trX, trY, targetX) {
+    if (!Array.isArray(trX) || !trX.length) return Array(targetX.length).fill(null);
+    // 前提：align_to=target なので trX は targetX の“連続部分”になっている想定
+    // 先頭の挿入位置（誤差対策に近似一致）
+    const eps = 1e-6;
+    let start = 0;
+    while (start < targetX.length && targetX[start] + eps < trX[0]) start++;
+    const out = Array(targetX.length).fill(null);
+    for (let i = 0; i < trY.length && (start + i) < out.length; i++) {
+      out[start + i] = trY[i];
+    }
+    return out;
+  }
+
+  // 先頭・末尾の連続無効値を完全に切り落とす
+  function trimLeadingTrailingInvalid(x, y) {
+    let start = 0;
+    let end = y.length - 1;
+  
+    const bad = v => v == null || !isFinite(v) || v === 0 || v === -1;
+  
+    while (start <= end && bad(y[start])) start++;
+    while (end >= start && bad(y[end])) end--;
+  
+    return {
+      x: x.slice(start, end + 1),
+      y: y.slice(start, end + 1)
+    };
+  }
+  
+  async function fetchPlotDataBatchScaled(wavelength, reflectance, overlayIds, opts) {
+    const payload = await fetch(apiUrl('analysis/plotdata'), {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'X-CSRFToken': csrftoken },
+      body: JSON.stringify({
+        interp_type:  opts.interp,
+        scaling_type: opts.scaling,
+        min_index:    opts.min_index,
+        max_index:    opts.max_index,
+        overlay_ids:  overlayIds,
+        wavelength:   wavelength,
+        reflectance:  Array.isArray(reflectance?.[0]) ? reflectance[0] : reflectance
+      })
+    }).then(r => r.json());
+
+    if (payload.error) throw new Error(payload.error);
+    const traces = Array.isArray(payload.traces) ? payload.traces : [];
+    if (!traces.length) throw new Error('No scaled traces returned.');
+
+    // traces[0] が Target（Scaled）
+    const target = traces[0];
+    targetWav = target.x || [];
+    targetRef = target.y || [];
+
+    const trimmed = trimLeadingTrailingInvalid(targetWav, targetRef);
+    targetWav = trimmed.x;
+    targetRef = trimmed.y;
+
+    // Overlays（Scaled）
+    overlayTraces.clear();
+    for (let i = 1; i < traces.length; i++) {
+      const tr = traces[i];
+      if (!tr || !tr.name) continue;
+      const paddedY = padToTargetGrid(tr.x, tr.y, targetWav);
+      overlayTraces.set(String(tr.name), { 
+        x: targetWav, 
+        y: paddedY, 
+        mode: 'lines', 
+        name: tr.name, 
+        line: { width: 1 } });
+    }
+  }
+
+  // 先頭・末尾の0や-1を null にしてギャップにする
+  function dropEdgeZeros(arr) {
+    if (!Array.isArray(arr)) return arr;
+    const a = arr.slice();
+    let i = 0, j = a.length - 1;
+    while (i <= j && (!isFinite(a[i]) || a[i] === 0 || a[i] === -1)) { a[i] = null; i++; }
+    while (j >= i && (!isFinite(a[j]) || a[j] === 0 || a[j] === -1)) { a[j] = null; j--; }
+    return a;
+  }
+  
+  async function fetchPlotDataBatchRaw(wavelength, reflectance, overlayIds, opts) {
+    const payload = await fetch(apiUrl('analysis/plotdata_raw'), {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'X-CSRFToken': csrftoken },
+      body: JSON.stringify({
+        overlay_ids: overlayIds,
+        wavelength:  wavelength,
+        reflectance: Array.isArray(reflectance?.[0]) ? reflectance[0] : reflectance,
+      })
+    }).then(r => r.json());
+
+    if (payload.error) throw new Error(payload.error);
+    const traces = Array.isArray(payload.traces) ? payload.traces : [];
+    if (!traces.length) throw new Error('No raw traces returned.');
+  
+    const target = traces[0];
+    targetRawX = target.x || [];
+    targetRawY = target.y || [];
+
+    targetRawY = scrubEdgeGlitches(targetRawY);
+  
+    rawTraces.clear();
+    for (let i = 1; i < traces.length; i++) {
+      const tr = traces[i];
+      if (!tr || !tr.name) continue;
+      const cleanedY = scrubEdgeGlitches(tr.y);
+      rawTraces.set(String(tr.name), { x: tr.x, y: cleanedY, mode: 'lines', name: tr.name, line: { width: 1 } });
+    }
+
+    targetRawY = dropEdgeZeros(targetRawY);
+
+    rawTraces.forEach((tr, key) => {
+      tr.y = dropEdgeZeros(tr.y);
+      rawTraces.set(key, tr);
+    });
+  }
+
+  // 追加: 先頭・末尾の0や無効値を null にするヘルパ
+  function dropEdgeZeros(arr) {
+    if (!Array.isArray(arr)) return arr;
+    const a = arr.slice();
+    let i = 0, j = a.length - 1;
+  
+    // 先頭側
+    while (i <= j && (!isFinite(a[i]) || a[i] === 0 || a[i] === -1)) {
+      a[i] = null; i++;
+    }
+    // 末尾側
+    while (j >= i && (!isFinite(a[j]) || a[j] === 0 || a[j] === -1)) {
+      a[j] = null; j--;
+    }
+    return a;
+  }
+
+  async function fetchSpectrumOverlay(spectrumId) {
+    if (!spectrumId || overlayTraces.has(spectrumId)) return;
+    const url = apiUrl(`analysis/spectrum/${encodeURIComponent(spectrumId)}?align_to=target`);
+    const resp = await fetch(url);
+    if (!resp.ok) throw new Error(`fetch failed (${resp.status})`);
+    const { wavelength, reflectance, label } = await resp.json();
+    const paddedY = padToTargetGrid(wavelength, reflectance, targetWav);
+    overlayTraces.set(String(spectrumId), {
+      x: targetWav,
+      y: paddedY,
+      mode: 'lines',
+      name: label || String(spectrumId),
+      line: { width: 1 }
+    });
+  }
+
+  async function autoOverlayTopN(rows, limit) {
+    const ids = rows.slice(0, limit).map(r => String(r.SpectrumID)).filter(Boolean);
+    for (let i = 0; i < ids.length; i += PARALLEL_CHUNK) {
+      const chunk = ids.slice(i, i + PARALLEL_CHUNK);
+      await Promise.all(chunk.map(id => fetchSpectrumOverlay(id).catch(e => console.warn('overlay skip', id, e.message))));
+      renderSpectrum(); // チャンクごとに再描画
+    }
+  }
+
+  async function toggleOverlayBySpectrumId(spectrumId) {
+    if (!spectrumId) return;
+    if (overlayTraces.has(spectrumId)) {
+      overlayTraces.delete(spectrumId);
+      renderSpectrum();
+      return;
+    }
+    try {
+      await fetchSpectrumOverlay(spectrumId);
+      renderSpectrum();
+    } catch (e) {
+      console.warn('Overlay fetch skipped:', e.message);
+    }
+  }
+
+  function wavelengthToIndexRange(wavs, wavMin, wavMax) {
+    // wavs: 昇順の波長配列を想定
+    let min_index = null;
+    let max_index = null ;
+ 
+    if (wavMin !== null &&  Number.isFinite(wavMin)) {
+      const i0 = wavs.findIndex(v => v >= wavMin);
+      min_index = (i0 >= 0) ? i0 : null;
+    }
+
+    if (wavMax !== null && Number.isFinite(wavMax)) {
+      let i1 = -1;
+      for (let k = wavs.length - 1; k >= 0; k--) {
+        if (wavs[k] <= wavMax) { i1 = k; break; }
+      }
+      // Python の slice は stop が「含まない」ので +1 する
+      max_index = (i1 >= 0) ? (i1 + 1) : null;
+    }
+
+    if (min_index !== null && max_index !== null && max_index < min_index) {
+      return { error: true, min_index: null, max_index: null };
+    }
+    return { error: false, min_index, max_index };
+  }
+
+  /* ====== Run with provided spectrum ====== */
+  async function runWithSpectrum(wavelength, reflectance) {
+    const interpSel = document.getElementById('sel_interp').value;
+    const scalingSel = document.getElementById('sel_scaling').value;
+    const simSel     = document.getElementById('sel_sim_type').value;
+    const sortSel    = document.getElementById('sel_sort').value;
+    const ascSel = document.getElementById('sel_ascending').value === 'true';
+    const idxMinStr = document.getElementById('idx_min').value.trim();
+    const idxMaxStr = document.getElementById('idx_max').value.trim();
+    
+    document.getElementById('thMetric').textContent = 'similarity_method';
+    document.getElementById('thSort').textContent = 'Band number';
+
+    const wavMin = (idxMinStr === '') ? null : parseFloat(idxMinStr);
+    const wavMax = (idxMaxStr === '') ? null : parseFloat(idxMaxStr);
+
+    const r = wavelengthToIndexRange(wavelength, wavMin, wavMax);
+    if (r.error) throw new Error('Invalid wavelength range');
+
+    let min_index = r.min_index;
+    let max_index = r.max_index;
+
+    const err = document.getElementById('errMsg');
+    err.style.display = 'none';
+    if (wavMin !== null && wavMax !== null && wavMax < wavMin) {
+      err.style.display = 'block'; return;
+    }
+
+    const wrap  = document.getElementById('tableWrap');
+    const tbody = document.getElementById('analysisTbody');
+    wrap.style.display = 'block';
+    tbody.innerHTML = `<tr><td colspan="5">Running…</td></tr>`;
+
+    // 1) サーバ解析を実行して上位N件を取得（テーブル用）
+    const res = await fetch(apiUrl('analysis/run/'), {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'X-CSRFToken': csrftoken },
+      body: JSON.stringify({
+        interp_type:  interpSel,
+        scaling_type: scalingSel,
+        sim_type:     simSel,
+        sort:         sortSel,
+        ascending:    ascSel,
+        top_n:        AUTO_OVERLAY_TOP_N,
+        min_index:    min_index,
+        max_index:    max_index,
+        wavelength:   wavelength,
+        reflectance:  Array.isArray(reflectance?.[0]) ? reflectance[0] : reflectance
+      })
+    }).then(r => r.json());
+
+    if (res.error) throw new Error(res.error);
+    const rows = Array.isArray(res.results) ? res.results : [];
+
+    // テーブルを描画
+    const metricKey = simSel;
+    const htmlRows = rows.map(r => {
+      const metricVal = (typeof r["similarity_method"] === 'number' && Number.isFinite(r["similarity_method"]))
+      ? r["similarity_method"].toFixed(6)
+      : (r["similarity_method"] ?? '');
+      const bandVal = (r["Band Number"] ?? '');
+      const sid = (r.SpectrumID ?? '');
+      return `
+        <tr class="clickable-row" data-spectrum-id="${sid}">
+          <td>${sid}</td>
+          <td>${r.SampleID ?? ''}</td>
+          <td>${metricVal}</td>
+          <td style="text-align:center">${bandVal}</td>
+          <td>${r.SubType ?? ''}</td>
+        </tr>
+      `;
+    }).join('');
+    tbody.innerHTML = htmlRows || `<tr><td colspan="5">No rows</td></tr>`;
+
+    // 行クリック：Scaled 側のトグル（※描画は renderScaled を呼ぶ）
+    document.querySelectorAll('#analysis_tbl tbody tr').forEach(tr => {
+      tr.addEventListener('click', async () => {
+        const spectrumId = tr.getAttribute('data-spectrum-id') || tr.cells[0]?.textContent?.trim();
+        if (!spectrumId) return;
+        if (overlayTraces.has(spectrumId)) {
+          overlayTraces.delete(spectrumId);
+        } else {
+          try {
+            // 個別フェッチでも scaled を取得（既存APIを流用）
+            const url = apiUrl(`analysis/spectrum/${encodeURIComponent(spectrumId)}?align_to=target`);
+            const resp = await fetch(url);
+            if (!resp.ok) throw new Error(`fetch failed (${resp.status})`);
+            const { wavelength, reflectance, label } = await resp.json();
+            overlayTraces.set(String(spectrumId), {
+              x: wavelength, y: reflectance, mode: 'lines',
+              name: label || String(spectrumId), line: { width: 1 }
+            });
+          } catch(e) {
+            console.warn('Overlay fetch skipped:', e.message);
+          }
+        }
+        renderScaled();
+      });
+    });
+
+    // 2) Raw 一括 → 上のグラフ
+    try {
+      const ids = rows.slice(0, AUTO_OVERLAY_TOP_N).map(r => String(r.SpectrumID)).filter(Boolean);
+      await ensurePlotlyLoaded();
+      await fetchPlotDataBatchRaw(wavelength, reflectance, [], { min_index, max_index });
+      renderRaw();
+    } catch (e) {
+      console.warn('raw batch failed:', e.message);
+    }
+
+    // 3) Scaled 一括 → 下のグラフ
+    try {
+      const ids = rows.slice(0, AUTO_OVERLAY_TOP_N).map(r => String(r.SpectrumID)).filter(Boolean);
+      await fetchPlotDataBatchScaled(
+        wavelength,
+        reflectance,
+        ids,
+        { interp: interpSel, scaling: scalingSel, min_index, max_index }
+      );
+      renderScaled();
+    } catch (e) {
+      console.warn('scaled batch failed:', e.message);
+    }
+  }
+
+  // Run クリック
+  document.getElementById('runAnalysisBtn').addEventListener('click', async function () {
+    const wrap  = document.getElementById('tableWrap');
+    const tbody = document.getElementById('analysisTbody');
+    wrap.style.display = 'block';
+    tbody.innerHTML = `<tr><td colspan="5">Preparing spectrum…</td></tr>`;
+  
+    try {
+      // ★ ここが質問の答えの場所 ★
+      const cached = spectrumCacheByRowId[rowId];
+      if (cached) {
+        await runWithSpectrum(cached.wavelength, cached.reflectance);
+        return;
+      }
+  
+      // キャッシュが無ければサーバから取得
+      const res = await fetch(apiUrl('ref_table/get_graph_data/'), {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'X-CSRFToken': csrftoken },
+        body: JSON.stringify({ row_id: rowId })
+      }).then(r => r.json());
+  
+      if (!Array.isArray(res.data) || res.data.length === 0) {
+        throw new Error('No spectrum returned.');
+      }
+  
+      const first = res.data[0];
+      const wavelength  = first.wavelength || [];
+      const reflectance = first.reflectance || [];
+  
+      // ★ 正しいキャッシュ保存先
+      spectrumCacheByRowId[rowId] = { wavelength, reflectance };
+  
+      await runWithSpectrum(wavelength, reflectance);
+  
+    } catch (err) {
+      tbody.innerHTML = `
+        <tr>
+          <td colspan="5" style="color:red;">
+            ${err.message || 'Unexpected error'}
+          </td>
+        </tr>`;
+      console.error('Run failed:', err);
+    }
+  });
+
+
+    // CSV ダウンロード
+  document.getElementById('downloadCsvBtn').addEventListener('click', async function () {
+    try {
+      const rowsStr = (document.getElementById('downloadRowsInput')?.value || '').trim();
+      let download_rows = rowsStr === '' ? null : parseInt(rowsStr, 10);
+      if (Number.isNaN(download_rows) || download_rows <= 0) download_rows = null;
+      // まずターゲットスペクトルを取得（Run ボタンと同じロジック）
+      const dc = (typeof window !== 'undefined' ? window.data_copy : undefined);
+      const cachedFromGlobal = dc && dc[rowId] && dc[rowId].wavelength && dc[rowId].reflectance;
+      const cachedLocal = localSpectrumCache[rowId] && localSpectrumCache[rowId].wavelength && localSpectrumCache[rowId].reflectance;
+
+      let wavelength, reflectance;
+
+      if (cachedFromGlobal) {
+        ({ wavelength, reflectance } = dc[rowId]);
+      } else if (cachedLocal) {
+        ({ wavelength, reflectance } = localSpectrumCache[rowId]);
+      } else {
+        const res = await fetch(apiUrl('ref_table/get_graph_data/'), {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', 'X-CSRFToken': csrftoken },
+          body: JSON.stringify({ row_id: rowId })
+        }).then(r => r.json());
+
+        if (!Array.isArray(res.data) || res.data.length === 0) {
+          throw new Error('No spectrum returned.');
+        }
+        const first = res.data[0];
+        wavelength  = first.wavelength || [];
+        reflectance = first.reflectance || [];
+        localSpectrumCache[rowId] = { wavelength, reflectance };
+        if (dc) {
+          if (!dc[rowId]) dc[rowId] = {};
+          dc[rowId].wavelength  = wavelength;
+          dc[rowId].reflectance = reflectance;
+        }
+      }
+
+      // フォームのパラメータを取得
+      const interpSel = document.getElementById('sel_interp').value;
+      const scalingSel = document.getElementById('sel_scaling').value;
+      const simSel     = document.getElementById('sel_sim_type').value;
+      const sortSel    = document.getElementById('sel_sort').value;
+      const ascSel = document.getElementById('sel_ascending').value === 'true';
+      const idxMinStr  = document.getElementById('idx_min').value.trim();
+      const idxMaxStr  = document.getElementById('idx_max').value.trim();
+
+      let wavMin = (idxMinStr === '') ? null : parseFloat(idxMinStr);
+      let wavMax = (idxMaxStr === '') ? null : parseFloat(idxMaxStr);
+      
+      const r = wavelengthToIndexRange(wavelength, wavMin, wavMax);
+      if (r.error) { err.style.display = 'block'; return; }
+
+      let min_index = r.min_index;
+      let max_index = r.max_index;
+
+      // API を叩いて CSV を blob として受け取る
+      const resp = await fetch(apiUrl('analysis/download_csv/'), {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-CSRFToken': csrftoken
+        },
+        body: JSON.stringify({
+          interp_type:  interpSel,
+          scaling_type: scalingSel,
+          sim_type:     simSel,
+          sort:         sortSel,
+          ascending:    ascSel,
+          min_index:    min_index,
+          max_index:    max_index,
+          wavelength:   wavelength,
+          reflectance:  Array.isArray(reflectance?.[0]) ? reflectance[0] : reflectance,
+          download_rows: download_rows,
+        })
+      });
+
+      if (!resp.ok) {
+        const errText = await resp.text();
+        throw new Error(errText || ('HTTP ' + resp.status));
+      }
+
+      const blob = await resp.blob();
+      const url  = window.URL.createObjectURL(blob);
+      const a    = document.createElement('a');
+      a.href = url;
+      const safe = (s) => String(s ?? '').replace(/[^\w.\-]+/g, '_');
+      a.download = `analysis_${safe(simSel)}_${safe(dataId)}.csv`;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      window.URL.revokeObjectURL(url);
+    } catch (e) {
+      console.error('CSV download failed:', e);
+      alert('CSV のダウンロードに失敗しました: ' + (e && e.message ? e.message : e));
+    }
+  });
+
+  function closeDrawer() {
+    drawer.classList.remove('show');
+    overlay.style.display = 'none';
+    setTimeout(() => {
+      drawer.remove();
+      overlay.remove();
+    }, 220);
+  }
+  document.getElementById('analysis_close').addEventListener('click', closeDrawer);
+  overlay.addEventListener('click', closeDrawer);
+};
