@@ -206,17 +206,25 @@ function displayThumbnail(targetElement, dataObj) {
 
     wms_layers.ratio.object = {};
     wms_layers.ratio.object = object;
+
     let olMap = new ol.Map({
         target: targetElement,
         layers: [
             new ol.layer.Image({
                 source: new ol.source.ImageStatic({
-                    url: `/collect_static/${dataObj['Image_path']}`, //220928
-                    projection: object.projection,
-                    imageExtent: object.extent,
-                }),
+                url: `/collect_static/${dataObj['Image_path']}`,
+                projection: object.projection,
+                imageExtent: object.extent,
+                imageLoadFunction: function(image, src) {
+                    image.getImage().onerror = function() {
+                        console.error("ImageStatic failed:", src);
+                    };
+                    image.getImage().src = src;
+                },
+            }),
             }),
         ],
+        
         view: new ol.View({
             projection: object.projection,
             extent: object.extent,
@@ -261,7 +269,7 @@ function displayThumbnail(targetElement, dataObj) {
     });
 
     return olMap;
-}
+    }
 
 let thumbnailNum = 0;
 let storeClickedPx = [];
@@ -283,6 +291,8 @@ function displayThumbnailWindow(data) {
         existThumbnailWindow === 'All' ? ['None', 'All'] : alert('ERROR: existThumbnailWindow.') ;
 
     let dataObj = JSON.parse(data);
+    console.log(Object.keys(dataObj));
+    console.log(dataObj['Image_path'], dataObj['Mapping']);
     let [imgSize, obsID, path, imgPath, obsName, wav, coordinates] = [
         dataObj['Mapping']['Image_size'],
         dataObj['obs_ID'],

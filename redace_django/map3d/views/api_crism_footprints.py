@@ -32,11 +32,11 @@ def api_crism_footprints(request):
     if not crosses_antimeridian:
         sql = """
         SELECT
-          id,
-          observation_id,
-          ST_AsGeoJSON(ST_Intersection(ST_MakeValid(footprint), ST_MakeEnvelope(%s,%s,%s,%s,4326))) AS geom
+        id,
+        observation_id,
+        ST_AsGeoJSON(ST_Intersection(ST_SetSRID(ST_MakeValid(footprint),4326), ST_MakeEnvelope(%s,%s,%s,%s,4326))) AS geom
         FROM crism
-        WHERE footprint && ST_MakeEnvelope(%s,%s,%s,%s,4326)
+        WHERE ST_SetSRID(footprint,4326) && ST_MakeEnvelope(%s,%s,%s,%s,4326)
         ORDER BY id
         LIMIT %s;
         """
@@ -49,27 +49,28 @@ def api_crism_footprints(request):
           observation_id,
           ST_AsGeoJSON(
             ST_Intersection(
-              ST_MakeValid(footprint),
+              ST_SetSRID(ST_MakeValid(footprint), 4326),
               ST_Union(
-                ST_MakeEnvelope(%s,%s,180,%s,4326),
-                ST_MakeEnvelope(-180,%s,%s,%s,4326)
+                ST_MakeEnvelope(%s, %s, 180, %s, 4326),
+                ST_MakeEnvelope(-180, %s, %s, %s, 4326)
               )
             )
           ) AS geom
         FROM crism
-        WHERE footprint && ST_Union(
-          ST_MakeEnvelope(%s,%s,180,%s,4326),
-          ST_MakeEnvelope(-180,%s,%s,%s,4326)
+        WHERE ST_SetSRID(footprint, 4326) && ST_Union(
+          ST_MakeEnvelope(%s, %s, 180, %s, 4326),
+          ST_MakeEnvelope(-180, %s, %s, %s, 4326)
         )
         ORDER BY id
         LIMIT %s;
         """
         params = [
-            west, south, north, south, east, north,     # intersection union
-            west, south, north, south, east, north,     # bbox filter union
+            west, south, north,
+            south, east, north,
+            west, south, north,
+            south, east, north,
             limit
         ]
-
     features = []
     with connection.cursor() as cur:
         cur.execute(sql, params)

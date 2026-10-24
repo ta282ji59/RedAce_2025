@@ -26,7 +26,7 @@
     line-height: 50px; /* ボタンの高さに合わせて中央寄せ */
 }
 .button_tra::before,
-.button::after {
+.button_tra::after {
     position: absolute;
     z-index: -1;
     display: block;
@@ -45,5 +45,16 @@
     background-color: rgba(255, 165, 0, 0.7);
     cursor: pointer;
 }
+.product_ID {
+    width: 320px;
+    box-sizing: border-box;
+}
 
-
+#IDArea {
+    position: absolute;
+    z-index: 200;
+    width: 320px;
+    height: calc(100vh - 10px);
+    overflow-y: auto;
+    overflow-x: hidden;
+}

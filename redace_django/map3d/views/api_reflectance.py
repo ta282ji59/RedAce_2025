@@ -108,6 +108,8 @@ def base_json_getRef(params_json):
     ######## CRISM #########
     elif params_json["obs_name"] == 'CRISM' and params_json["type"] == 'DIRECT':
         # 新しいjson形式fieldを定義, 順番が保持された辞書
+        with open("/tmp/crism_api.log", "a") as f:
+            f.write("CRISM DIRECT: " + str(params_json) + "\n") 
         field = cl.OrderedDict()
         field["path"] = params_json["path"]
         field["obs_ID"] = params_json["obs_ID"]
@@ -117,17 +119,23 @@ def base_json_getRef(params_json):
         field["type"] = params_json["type"]
 
         # cubeファイルを開く, データを読み込み専用で開く, 第一引数：cubeファイル名
-        cube_link_change = field["path"]["main"]["cub"].replace("_trr3.cub", "_trr3_mapped.cub")
+        if "mptargeted" in field["path"]["main"]["cub"]:
+            cube_link_change = field["path"]["main"]["cub"]
+        else:
+            cube_link_change = field["path"]["main"]["cub"].replace("_trr3.cub", "_trr3_mapped.cub")
         cube_data = gdal.Open(cube_link_change, gdal.GA_ReadOnly)
+
         # 属性の変数格納
         get_raster_band = cube_data.GetRasterBand
         # バンドのデータ無し値を取得
         NDV = get_raster_band(1).GetNoDataValue()
 
         # 波長の順番が昇順と降順の時がある >> 昇順にする
+        #  # wavelength が "0.1,0.2,..." の文字列でも [0.1,0.2,...] の配列でも両対応
+        
+        # 波長の取得
         wav = params_json.get("wavelength", [])
 
-        # wavelength が "0.1,0.2,..." の文字列でも [0.1,0.2,...] の配列でも両対応
         if isinstance(wav, str):
             wav_list = [round(float(s), 5) for s in wav.split(',') if s != ""]
         elif isinstance(wav, (list, tuple)):
@@ -135,6 +143,13 @@ def base_json_getRef(params_json):
         else:
             wav_list = []
 
+        # MTRDR: wavelength が空なら WV TAB から取得
+        if not wav_list and "mtrdr" in field["path"]["main"]["cub"].lower():
+            wav_path = field["path"]["derived"]["wavelength"]
+            table = np.loadtxt(wav_path, delimiter=",")
+            wav_list = (table[:, 2] / 1000.0).round(5).tolist()
+
+        # 波長の順番を昇順にする
         if len(wav_list) >= 2 and wav_list[0] > wav_list[1]:
             wav_list.reverse()
             is_reverse = True
@@ -154,7 +169,7 @@ def base_json_getRef(params_json):
             # 反射率をリストに格納
             for bandnumber_i in bandnumber_range:
                 v = get_raster_band(bandnumber_i + 1).ReadAsArray()[y1][x1]
-                if v != NDV and np.isfinite(v):
+                if v != NDV and v != 65535 and np.isfinite(v):
                     ref_list.append(float(v))
                 else:
                     ref_list.append(np.nan)
@@ -185,17 +200,26 @@ def base_json_getRef(params_json):
         # cube_data2 = gdal.Open(field["path"]["derived"]["cub"], gdal.GA_ReadOnly)
         # lon = cube_data2.GetRasterBand(5).ReadAsArray()[y1][x1]
         # lat = cube_data2.GetRasterBand(4).ReadAsArray()[y1][x1]
-        width_max = cube_data.RasterXSize
-        height_max = cube_data.RasterYSize
-        lbl_data = pvl.load(field["path"]["main"]["lbl"])
-        MinimumLatitude = lbl_data["Caminfo"]["Polygon"]["Mapping"]["MinimumLatitude"]
-        MaximumLatitude = lbl_data["Caminfo"]["Polygon"]["Mapping"]["MaximumLatitude"]
-        MinimumLongitude = lbl_data["Caminfo"]["Polygon"]["Mapping"]["MinimumLongitude"]
-        MaximumLongitude = lbl_data["Caminfo"]["Polygon"]["Mapping"]["MaximumLongitude"]
-        lon = MinimumLongitude + (x1 / (width_max - 1)) * (MaximumLongitude - MinimumLongitude)
-        lat = MaximumLatitude - (y1 / (height_max - 1)) * (MaximumLatitude - MinimumLatitude)
+        if "mptargeted" in field["path"]["main"]["cub"]:
+            mp = pvl.load(field["path"]["main"]["lbl"])["IMAGE_MAP_PROJECTION"]
+            west = float(mp["WESTERNMOST_LONGITUDE"].value)
+            east = float(mp["EASTERNMOST_LONGITUDE"].value)
+            south = float(mp["MINIMUM_LATITUDE"].value)
+            north = float(mp["MAXIMUM_LATITUDE"].value)
+            lon = west + x1 / (cube_data.RasterXSize - 1) * (east - west)
+            lat = north - y1 / (cube_data.RasterYSize - 1) * (north - south)
+        else:
+            width_max = cube_data.RasterXSize
+            height_max = cube_data.RasterYSize
+            lbl_data = pvl.load(field["path"]["main"]["lbl"])
+            MinimumLatitude = lbl_data["Caminfo"]["Polygon"]["Mapping"]["MinimumLatitude"]
+            MaximumLatitude = lbl_data["Caminfo"]["Polygon"]["Mapping"]["MaximumLatitude"]
+            MinimumLongitude = lbl_data["Caminfo"]["Polygon"]["Mapping"]["MinimumLongitude"]
+            MaximumLongitude = lbl_data["Caminfo"]["Polygon"]["Mapping"]["MaximumLongitude"]
+            lon = MinimumLongitude + x1 / (width_max - 1) * (MaximumLongitude - MinimumLongitude)
+            lat = MaximumLatitude - y1 / (height_max - 1) * (MaximumLatitude - MinimumLatitude)
         field["coordinate"] = [round(float(lon), 5), round(float(lat), 5)]
-
+            
         json_data = json.dumps(field)
         return json_data
     

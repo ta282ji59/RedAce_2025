@@ -1,12 +1,14 @@
-body{
-    position:absolute; 
-    top:0px; 
-    left:0px; 
-    font-size:100%; 
-    clear: both;
+html,
+body {
     width: 100%;
     height: 100%;
-    margin:0px;
+    margin: 0;
+    padding: 0;
+    overflow: hidden;
+}
+
+body {
+    font-size: 100%;
     background: #565656;
     font-family: serif;
 }

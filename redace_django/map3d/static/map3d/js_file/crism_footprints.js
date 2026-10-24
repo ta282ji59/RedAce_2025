@@ -18,9 +18,14 @@ async function loadCrismFootprintsByBBox(viewer) {
   const south = Cesium.Math.toDegrees(rect.south);
   const north = Cesium.Math.toDegrees(rect.north);
 
+  console.log("CRISM BBOX:", west, east, south, north);
   const url = `/map3d/api/crism_footprints?west=${west}&east=${east}&south=${south}&north=${north}&limit=800`;
 
-  const geojson = await fetch(url).then(r => r.json());
+  const r = await fetch(url);
+  console.log("CRISM status:", r.status, url);
+  const geojson = await r.json();
+  console.log("CRISM URL:", url);
+  console.log("CRISM features:", geojson.features?.length);
 
   if (crismFootprintsDS) viewer.dataSources.remove(crismFootprintsDS);
 

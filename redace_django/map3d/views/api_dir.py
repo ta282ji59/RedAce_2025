@@ -181,16 +181,42 @@ def base_json(params):
         field["Ratio_path_json"] = params_json["path"]["image"].get('ratio')
         field["geometry"] = geometry
 
-        cube_data2 = gdal.Open(params_json["path"]["data"]["derived"]["cub"], gdal.GA_ReadOnly)
+        if "mptargeted" in params_json["path"]["data"]["main"]["cub"]:
+            cube_data2 = gdal.Open(params_json["path"]["data"]["derived"]["lbl"], gdal.GA_ReadOnly)
+            lat_band, lon_band = 4, 5
+        else:
+            cube_data2 = gdal.Open(params_json["path"]["data"]["derived"]["cub"], gdal.GA_ReadOnly)
+            lat_band, lon_band = 4, 5
+
         cube_coords = cl.OrderedDict()
-        cube_coords["lat"] = cube_data2.GetRasterBand(4).ReadAsArray().tolist()
-        cube_coords["lon"] = cube_data2.GetRasterBand(5).ReadAsArray().tolist()
+        cube_coords["lat"] = cube_data2.GetRasterBand(lat_band).ReadAsArray().tolist()
+        cube_coords["lon"] = cube_data2.GetRasterBand(lon_band).ReadAsArray().tolist()
         field["cube_coords"] = cube_coords
 
     else:
         return "NoData"
 
-    if "Caminfo" in lbl_data:
+    if name == "crism" and "mptargeted" in params_json["path"]["data"]["main"]["cub"]:
+        mp = lbl_data["IMAGE_MAP_PROJECTION"]
+        west = float(mp["WESTERNMOST_LONGITUDE"])
+        east = float(mp["EASTERNMOST_LONGITUDE"])
+        south = float(mp["MINIMUM_LATITUDE"])
+        north = float(mp["MAXIMUM_LATITUDE"])
+        data["StartTime"] = str(lbl_data.get("START_TIME", ""))
+        data["EndTime"] = str(lbl_data.get("STOP_TIME", ""))
+        data["CenterLatitude"] = str((south + north) / 2)
+        data["CenterLongitude"] = str((west + east) / 2)
+        data["UpperLeftLongitude"] = str(west)
+        data["UpperLeftLatitude"] = str(north)
+        data["LowerLeftLongitude"] = str(west)
+        data["LowerLeftLatitude"] = str(south)
+        data["LowerRightLongitude"] = str(east)
+        data["LowerRightLatitude"] = str(south)
+        data["UpperRightLongitude"] = str(east)
+        data["UpperRightLatitude"] = str(north)
+        data["SolarLongitude"] = str(lbl_data.get("SOLAR_LONGITUDE", ""))
+    
+    elif "Caminfo" in lbl_data:
         data["StartTime"] = str(lbl_data["Caminfo"]["Geometry"].get("StartTime", ""))
         data["EndTime"] = str(lbl_data["Caminfo"]["Geometry"].get("EndTime", ""))
         data["CenterLatitude"] = str(lbl_data["Caminfo"]["Geometry"].get("CenterLatitude", ""))
@@ -206,7 +232,6 @@ def base_json(params):
         data["LowerRightLatitude"] = str(lbl_data["Caminfo"]["Geometry"].get("LowerRightLatitude", ""))
         data["UpperRightLongitude"] = str(lbl_data["Caminfo"]["Geometry"].get("UpperRightLongitude", ""))
         data["UpperRightLatitude"] = str(lbl_data["Caminfo"]["Geometry"].get("UpperRightLatitude", ""))
-    
         data["PhaseAngle"] = str(lbl_data["Caminfo"]["Geometry"].get("PhaseAngle", ""))
         data["EmissionAngle"] = str(lbl_data["Caminfo"]["Geometry"].get("EmissionAngle", ""))
         data["IncidenceAngle"] = str(lbl_data["Caminfo"]["Geometry"].get("IncidenceAngle", ""))
